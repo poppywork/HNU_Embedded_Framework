@@ -36,7 +36,7 @@ rt_thread_t ins_thread_handle;
 #endif /* BSP_USING_SHOOT_TASK */
 #ifdef BSP_USING_REFEREE_TASK
  rt_thread_t referee_thread_handle;
-#endif /* BSP_USING_SHOOT_TASK */
+#endif /* BSP_USING_REFEREE_TASK */
 /**
  * @brief 初始化机器人任务,所有持续运行的任务都在这里初始化
  *
