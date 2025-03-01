@@ -308,8 +308,6 @@ void gimbal_down_rx_callback(rt_device_t dev, uint32_t id, uint8_t *data){
     uint32_t gyro_down_z;
     uint32_t yaw_down_total_angle;
     // 找到对应的实例后再调用decode_dji_motor进行解析
-    for (size_t i = 0; i < 4; ++i)
-    {
         if (dev == gimbal_can && id == send_msg[0].id)
         {
             uint8_t *rxbuff = data;
@@ -320,7 +318,7 @@ void gimbal_down_rx_callback(rt_device_t dev, uint32_t id, uint8_t *data){
            trans_fdb.gyro_down_z= *((float *)&gyro_down_z);
            trans_fdb.yaw_down_total_angle = *((float *)&yaw_down_total_angle);
         }
-        if (dev == gimbal_can && id == send_msg[1].id)
+        else if (dev == gimbal_can && id == send_msg[1].id)
         {
             uint8_t *rxbuff = data;
             gyro_down_z = (uint32_t )rxbuff[0] | (((uint32_t )rxbuff[1]) << 8) | (((uint32_t )rxbuff[2]) << 16)
@@ -330,17 +328,21 @@ void gimbal_down_rx_callback(rt_device_t dev, uint32_t id, uint8_t *data){
             trans_fdb.angular_x= *((float *)&gyro_down_z);
             trans_fdb.angular_y= *((float *)&yaw_down_total_angle);
         }
-        if (dev == gimbal_can && id == send_msg[2].id)
+        else if (dev == gimbal_can && id == send_msg[2].id)
         {
             uint8_t *rxbuff = data;
             gyro_down_z = (uint32_t )rxbuff[0] | (((uint32_t )rxbuff[1]) << 8) | (((uint32_t )rxbuff[2]) << 16)
                           | (((uint32_t )rxbuff[3]) << 24) ;
             yaw_down_total_angle = (uint32_t )rxbuff[4] | (((uint32_t )rxbuff[5]) << 8) | (((uint32_t )rxbuff[6]) << 16)
                                    | (((uint32_t )rxbuff[7]) << 24) ;
-            trans_fdb.angular_z= *((float *)&gyro_down_z);
+            trans_fdb.angular_z= (*((float *)&gyro_down_z));
+            if(trans_fdb.angular_z == -1)
+            {
+                trans_fdb.angular_z=0;
+            }
             trans_fdb.linear_x= *((float *)&yaw_down_total_angle);
         }
-        if (dev == gimbal_can && id == send_msg[3].id)
+        else if (dev == gimbal_can && id == send_msg[3].id)
         {
             uint8_t *rxbuff = data;
             gyro_down_z = (uint32_t )rxbuff[0] | (((uint32_t )rxbuff[1]) << 8) | (((uint32_t )rxbuff[2]) << 16)
@@ -350,5 +352,7 @@ void gimbal_down_rx_callback(rt_device_t dev, uint32_t id, uint8_t *data){
             trans_fdb.linear_y= *((float *)&gyro_down_z);
             trans_fdb.linear_z= *((float *)&yaw_down_total_angle);
         }
-    }
+        else{
+
+        }
 }
