@@ -599,9 +599,16 @@ static void remote_to_cmd_sbus(void)
 // TODO: 目前状态机转换较为简单，有很多优化和改进空间
 //遥控器的控制信息转化为标准单位，平移为(mm/s)旋转为(degree/s)
     /*底盘命令*/
-    chassis_cmd.vx = rc_now->ch1 * CHASSIS_RC_MOVE_RATIO_X / RC_MAX_VALUE * MAX_CHASSIS_VX_SPEED ;
-    chassis_cmd.vy = rc_now->ch2 * CHASSIS_RC_MOVE_RATIO_Y / RC_MAX_VALUE * MAX_CHASSIS_VY_SPEED ;
-    chassis_cmd.vw = rc_now->ch4 * CHASSIS_RC_MOVE_RATIO_R / RC_MAX_VALUE * MAX_CHASSIS_VR_SPEED ;
+     if(gim_cmd.ctrl_mode==GIMBAL_AUTO)
+    {
+        chassis_cmd.vx = (-trans_fdb.linear_x) * 1000 + rc_now->ch1 * CHASSIS_RC_MOVE_RATIO_X / RC_MAX_VALUE * MAX_CHASSIS_VX_SPEED ;
+        chassis_cmd.vy = (-trans_fdb.linear_y) * 1000 + rc_now->ch2 * CHASSIS_RC_MOVE_RATIO_Y / RC_MAX_VALUE * MAX_CHASSIS_VY_SPEED ;
+        chassis_cmd.vw = rc_now->ch4 * CHASSIS_RC_MOVE_RATIO_R / RC_MAX_VALUE * MAX_CHASSIS_VR_SPEED ;
+    } else{
+        chassis_cmd.vx = rc_now->ch1 * CHASSIS_RC_MOVE_RATIO_X / RC_MAX_VALUE * MAX_CHASSIS_VX_SPEED ;
+        chassis_cmd.vy = rc_now->ch2 * CHASSIS_RC_MOVE_RATIO_Y / RC_MAX_VALUE * MAX_CHASSIS_VY_SPEED ;
+        chassis_cmd.vw = rc_now->ch4 * CHASSIS_RC_MOVE_RATIO_R / RC_MAX_VALUE * MAX_CHASSIS_VR_SPEED ;
+    }
     chassis_cmd.offset_angle = gim_fdb.yaw_relative_angle;
     /*云台命令*/
     if (gim_cmd.ctrl_mode==GIMBAL_GYRO)
@@ -621,13 +628,12 @@ static void remote_to_cmd_sbus(void)
     VAL_LIMIT(gim_cmd.pitch, PIT_ANGLE_MIN, PIT_ANGLE_MAX);
 
     /*-------------------------------------------------底盘_云台状态机--------------------------------------------------------------*/
-    // 左拨杆sw2为上时，底盘和云台均RELAX；为中时，云台为GYRO；为下时，云台为AUTO。
-    // 右拨杆sw1为上时，底盘为FOLLOW；为中时，底盘为OPEN；为下时，底盘为SPIN。
+    // 右拨杆sw3为上时，底盘和云台均RELAX；为中时，云台为GYRO；为下时，云台为AUTO。
+    // 左拨杆sw2为上时，底盘为FOLLOW；为下时，底盘为SPIN。
     if (gim_cmd.ctrl_mode==GIMBAL_INIT||gim_cmd.ctrl_mode==GIMBAL_RELAX)
     {
         gim_cmd.pitch=0;
         gim_cmd.yaw=0;
-
     }
     switch (rc_now->sw2)
     {
@@ -643,9 +649,6 @@ static void remote_to_cmd_sbus(void)
             chassis_cmd.ctrl_mode = CHASSIS_RELAX;
         }
         break;
-//    case RC_MI:
-//        chassis_cmd.ctrl_mode = CHASSIS_OPEN_LOOP;
-//        break;
     case RC_DN:
         if(gim_cmd.ctrl_mode != GIMBAL_INIT && gim_cmd.ctrl_mode != GIMBAL_RELAX)
         {
@@ -661,7 +664,6 @@ static void remote_to_cmd_sbus(void)
                 chassis_cmd.vx=2000*(float)(rc_now->ch5) / RC_MAX_VALUE;
                 chassis_cmd.vy=2000*(float)(rc_now->ch5) / RC_MAX_VALUE;
             }
-
         }
         else
         {
@@ -703,7 +705,8 @@ static void remote_to_cmd_sbus(void)
             if(gim_fdb.back_mode == BACK_IS_OK)
             {/* 判断归中是否完成 */
                 gim_cmd.ctrl_mode = GIMBAL_AUTO;
-                chassis_cmd.ctrl_mode=CHASSIS_RELAX;
+                chassis_cmd.ctrl_mode=CHASSIS_OPEN_LOOP;
+                //chassis_cmd.ctrl_mode=CHASSIS_FOLLOW_GIMBAL;
             }
         }
         break;
