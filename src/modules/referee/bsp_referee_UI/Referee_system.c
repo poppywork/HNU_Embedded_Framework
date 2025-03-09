@@ -80,6 +80,7 @@ void referee_thread_entry(void *argument)
     /*裁判系统初始化*/
     Referee_system_Init(RX_AgreementData_Buffer0,RX_AgreementData_Buffer1,Agreement_RX_BUF_NUM);
     /*线程发布订阅机制初始化*/
+
     referee_pub_init();
     referee_sub_init();
     /*裁判系统数据解包*/

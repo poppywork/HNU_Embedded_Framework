@@ -142,7 +142,7 @@
 /* pitch轴最大仰角 */
 #define PIT_ANGLE_MAX        19.85f
 /* pitch轴最大俯角 */
-#define PIT_ANGLE_MIN        -15.0f
+#define PIT_ANGLE_MIN        -19.0f
 
 /* 云台控制周期 (ms) */
 #define GIMBAL_PERIOD 1
@@ -179,8 +179,8 @@
 /* 云台PITCH轴电机PID参数 /*
 /* imu速度环 */
 #define PITCH_KP_V_IMU           2000
-#define PITCH_KI_V_IMU           1000
-#define PITCH_KD_V_IMU           2
+#define PITCH_KI_V_IMU           750
+#define PITCH_KD_V_IMU           1
 #define PITCH_INTEGRAL_V_IMU     2500
 #define PITCH_MAX_V_IMU          30000
 
@@ -188,7 +188,7 @@
 
 #define PITCH_KP_A_IMU           0.4f
 #define PITCH_KI_A_IMU           0.1f
-#define PITCH_KD_A_IMU           0.001f
+#define PITCH_KD_A_IMU           0.035f
 #define PITCH_INTEGRAL_A_IMU     5.0f
 #define PITCH_MAX_A_IMU          20
 
@@ -201,7 +201,7 @@
 /* auto角度环 */
 #define PITCH_KP_A_AUTO          0.20f
 #define PITCH_KI_A_AUTO          0.1f
-#define PITCH_KD_A_AUTO          0.0001f
+#define PITCH_KD_A_AUTO          0.001f
 #define PITCH_INTEGRAL_A_AUTO    5.0f
 #define PITCH_MAX_A_AUTO         20
 

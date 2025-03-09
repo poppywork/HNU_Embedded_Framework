@@ -83,7 +83,6 @@ void chassis_thread_entry(void *argument)
     chassis_sub_init();
     chassis_motor_init();
     TIM_Init();
-    follow_pid->DeadBand = 1;
     LOG_I("Chassis Task Start");
     for (;;)
     {
@@ -108,6 +107,11 @@ void chassis_thread_entry(void *argument)
             break;
         case CHASSIS_FOLLOW_GIMBAL:
             chassis_cmd.vw = -pid_calculate(follow_pid, chassis_cmd.offset_angle, SIDEWAYS_ANGLE);
+            if(chassis_cmd.vw<0.2 && chassis_cmd.vw > -0.2)
+            {
+                chassis_cmd.vw=0;
+            }
+
             /* 底盘运动学解算 */
             absolute_cal(&chassis_cmd, chassis_cmd.offset_angle);
             chassis_calc_moto_speed(&chassis_cmd, motor_ref);

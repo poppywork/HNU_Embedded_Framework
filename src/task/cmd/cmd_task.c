@@ -569,7 +569,7 @@ static void remote_to_cmd_pc_DT7(void)
     // else
 
         //连发模式
-        if((rc_now->mouse.l==1||rc_now->wheel <= -300)&&(shoot_cmd.friction_status==1)/*&&(referee_fdb.power_heat_data.shooter_17mm_1_barrel_heat < (referee_fdb.robot_status.shooter_barrel_heat_limit-10))*/)
+        if((km.v_sta == KEY_PRESS_LONG||rc_now->wheel <= -300)&&(shoot_cmd.friction_status==1)/*&&(referee_fdb.power_heat_data.shooter_17mm_1_barrel_heat < (referee_fdb.robot_status.shooter_barrel_heat_limit-10))*/)
         {
             shoot_cmd.ctrl_mode=SHOOT_COUNTINUE;
             shoot_cmd.shoot_freq=2000;

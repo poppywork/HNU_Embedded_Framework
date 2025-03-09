@@ -55,7 +55,7 @@ motor_config_t gimbal_motor_config[GIM_MOTOR_NUM] = {
                 .controller = &gim_controller[YAW],
         },
         {
-                .motor_type = M2006,   //英雄pitch轴改用丝杆结构，换用2006电机
+                .motor_type = M3508,   //英雄pitch轴改用丝杆结构，换用3508电机
                 .can_name = CAN_GIMBAL,
                 .rx_id = PITCH_MOTOR_ID,   //电机ID待定
                 .controller = &gim_controller[PITCH],
@@ -408,7 +408,7 @@ static rt_int16_t motor_control_pitch(dji_motor_measure_t measure){
          /* 注意负号 */
          pid_out_angle = pid_calculate(pid_angle, get_angle, gim_motor_ref[PITCH]);
 
-         float feedforward = 500 * pid_out_angle; //+ 50 * filtered_accel  ; //简单估计前馈量
+         float feedforward = 25 * pid_out_angle; //+ 50 * filtered_accel  ; //简单估计前馈量
          send_data = -pid_calculate(pid_speed, get_speed, pid_out_angle) - feedforward;     // 电机转动正方向与imu相反
       }
      else /* imu闭环 */
@@ -416,22 +416,9 @@ static rt_int16_t motor_control_pitch(dji_motor_measure_t measure){
         /* 限制云台俯仰角度 */
         VAL_LIMIT(gim_motor_ref[PITCH], PIT_ANGLE_MIN, PIT_ANGLE_MAX);
 
-
          pid_out_angle = pid_calculate(pid_angle, get_angle, gim_motor_ref[PITCH]);
-         if(pid_out_angle < 0)  //向下运动降低Kp，提升kd
-         {
-             pid_speed->Kp = PITCH_KP_V_IMU * 0.8;
-             pid_speed->Ki = PITCH_KI_V_IMU;
-             pid_speed->Kd = PITCH_KD_V_IMU * 1.2;
-         }
-         else
-         {
-             pid_speed->Kp = PITCH_KP_V_IMU;
-             pid_speed->Ki = PITCH_KI_V_IMU;
-             pid_speed->Kd = PITCH_KD_V_IMU;
-         }
 
-         float feedforward = 500 * pid_out_angle; //+ 50 * filtered_accel  ; //简单估计前馈量
+         float feedforward = 50 * pid_out_angle; //+ 50 * filtered_accel  ; //简单估计前馈量
         send_data = -pid_calculate(pid_speed, get_speed, pid_out_angle) - feedforward ;      // 电机转动正方向与imu相反
     }
 
