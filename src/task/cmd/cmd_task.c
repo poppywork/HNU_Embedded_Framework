@@ -603,7 +603,7 @@ static void remote_to_cmd_sbus(void)
     {
         chassis_cmd.vx = (-trans_fdb.linear_x) * 1000 + rc_now->ch1 * CHASSIS_RC_MOVE_RATIO_X / RC_MAX_VALUE * MAX_CHASSIS_VX_SPEED ;
         chassis_cmd.vy = (-trans_fdb.linear_y) * 1000 + rc_now->ch2 * CHASSIS_RC_MOVE_RATIO_Y / RC_MAX_VALUE * MAX_CHASSIS_VY_SPEED ;
-        chassis_cmd.vw = rc_now->ch4 * CHASSIS_RC_MOVE_RATIO_R / RC_MAX_VALUE * MAX_CHASSIS_VR_SPEED ;
+        chassis_cmd.vw =  rc_now->ch4 * CHASSIS_RC_MOVE_RATIO_R / RC_MAX_VALUE * MAX_CHASSIS_VR_SPEED ;
     } else{
         chassis_cmd.vx = rc_now->ch1 * CHASSIS_RC_MOVE_RATIO_X / RC_MAX_VALUE * MAX_CHASSIS_VX_SPEED ;
         chassis_cmd.vy = rc_now->ch2 * CHASSIS_RC_MOVE_RATIO_Y / RC_MAX_VALUE * MAX_CHASSIS_VY_SPEED ;
@@ -613,14 +613,16 @@ static void remote_to_cmd_sbus(void)
     /*云台命令*/
     if (gim_cmd.ctrl_mode==GIMBAL_GYRO)
     {
-        gim_cmd.yaw += rc_now->ch4 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_YAW ;
+        gim_cmd.yaw = 0;
+        gim_cmd.yaw_down += rc_now->ch4 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_YAW ;
         gim_cmd.pitch += rc_now->ch3 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_PIT ;
         gyro_yaw_inherit =gim_cmd.yaw;
         gyro_pitch_inherit =ins_data.pitch;
     }
-    if (gim_cmd.ctrl_mode==GIMBAL_AUTO) {
-
-        gim_cmd.yaw = trans_fdb.yaw + gyro_yaw_inherit + 150 * rc_now->ch4 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_YAW;//上位机自瞄
+    if (gim_cmd.ctrl_mode==GIMBAL_AUTO)
+    {
+        gim_cmd.yaw = 0;
+        gim_cmd.yaw_down += rc_now->ch4 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_YAW ;
         gim_cmd.pitch = trans_fdb.pitch + 100* rc_now->ch3 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_PIT ;//上位机自瞄
 
     }
@@ -634,6 +636,7 @@ static void remote_to_cmd_sbus(void)
     {
         gim_cmd.pitch=0;
         gim_cmd.yaw=0;
+        gim_cmd.yaw_down=0;
     }
     switch (rc_now->sw2)
     {
@@ -660,9 +663,7 @@ static void remote_to_cmd_sbus(void)
             }
             if (gim_cmd.ctrl_mode==GIMBAL_AUTO)
             {
-                chassis_cmd.vw=(float)(rc_now->ch5) / RC_MAX_VALUE * ROTATE_RATIO_VW; // 小陀螺转速
-                chassis_cmd.vx=2000*(float)(rc_now->ch5) / RC_MAX_VALUE;
-                chassis_cmd.vy=2000*(float)(rc_now->ch5) / RC_MAX_VALUE;
+                chassis_cmd.vw = (float)(rc_now->ch5) / RC_MAX_VALUE * ROTATE_RATIO_VW; // 小陀螺转速
             }
         }
         else
@@ -681,6 +682,7 @@ static void remote_to_cmd_sbus(void)
         /*放开状态下，gim不接收值*/
         gim_cmd.pitch=0;
         gim_cmd.yaw=0;
+        gim_cmd.yaw_down=0;
         break;
     case RC_MI:
         if(gim_cmd.last_mode == GIMBAL_RELAX)
@@ -705,8 +707,6 @@ static void remote_to_cmd_sbus(void)
             if(gim_fdb.back_mode == BACK_IS_OK)
             {/* 判断归中是否完成 */
                 gim_cmd.ctrl_mode = GIMBAL_AUTO;
-                chassis_cmd.ctrl_mode=CHASSIS_OPEN_LOOP;
-                //chassis_cmd.ctrl_mode=CHASSIS_FOLLOW_GIMBAL;
             }
         }
         break;

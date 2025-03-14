@@ -79,6 +79,7 @@ struct chassis_cmd_msg
 struct gimbal_cmd_msg
 { // 云台期望角度控制
     float yaw;
+    float yaw_down;
     float pitch;
     gimbal_mode_e ctrl_mode;  // 当前云台控制模式
     gimbal_mode_e last_mode;  // 上一次云台控制模式
@@ -158,6 +159,7 @@ struct shoot_fdb_msg
      float pitch_down;
      float yaw_down_total_angle;
      float gyro_down_z;
+     float gyro_down_anger_z;
  };
  /* ------------------------------ referee反馈状态数据 ------------------------------ */
 /**
