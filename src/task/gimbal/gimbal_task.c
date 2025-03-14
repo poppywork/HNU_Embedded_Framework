@@ -167,9 +167,9 @@ void gimbal_thread_entry(void *argument)
             case GIMBAL_GYRO:
                 gim_motor_ref[YAW] = gim_cmd.yaw;
                 gim_motor_ref[PITCH] = gim_cmd.pitch;
-                gim_motor_ref[YAW_DOWN] = 0;
+                gim_motor_ref[YAW_DOWN] = gim_cmd.yaw_down;
                 // 底盘相对于云台归中值的角度，取负
-                gim_fdb.yaw_relative_angle = -yaw_motor_relive;
+                gim_fdb.yaw_relative_angle = -yaw_down_motor_relive;
                 gim_fdb.yaw_offset_angle=ins_data.yaw;//手动模式下时刻刷新，自瞄模式下不刷新
                 //auto_staus=1;
 
@@ -183,11 +183,11 @@ void gimbal_thread_entry(void *argument)
 //                    gim_fdb.yaw_offset_angle=ins_data.yaw;
 //                    auto_staus=0;
 //                }
-                gim_motor_ref[YAW] =gim_cmd.yaw;
-                gim_motor_ref[PITCH] =gim_cmd.pitch;
-                gim_motor_ref[YAW_DOWN] = 0;
+                gim_motor_ref[YAW] = gim_cmd.yaw;
+                gim_motor_ref[PITCH] = gim_cmd.pitch;
+                gim_motor_ref[YAW_DOWN] = gim_cmd.yaw_down;
                 // 底盘相对于云台归中值的角度，取负
-                gim_fdb.yaw_relative_angle = -yaw_motor_relive;
+                gim_fdb.yaw_relative_angle = -yaw_down_motor_relive;
                 break;
 
             default:
@@ -467,6 +467,11 @@ static rt_int16_t motor_control_yaw_down(dji_motor_measure_t measure){
         /* 注意负号 */
         pid_out_angle = pid_calculate(pid_angle, get_angle, gim_motor_ref[YAW_DOWN]);
         send_data = -pid_calculate(pid_speed, get_speed, pid_out_angle);      // 电机转动正方向与imu相反
+        if(gim_cmd.ctrl_mode == GIMBAL_AUTO)
+        {
+            pid_out_angle = pid_calculate(pid_angle, get_angle, gim_motor_ref[YAW_DOWN]);
+            send_data = -pid_calculate(pid_speed, get_speed, trans_fdb.angular_z * RADIAN_COEF);
+        }
     }
     return send_data;
 }
