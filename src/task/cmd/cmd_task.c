@@ -42,6 +42,9 @@ static void cmd_sub_pull(void);
 static int trigger_flag=0;
 /*堵转电流反转记次*/
 static int reverse_cnt;
+/*自瞄累计角度*/
+static float auto_pitch_inherit;
+static float auto_yaw_inherit;
 static float gyro_yaw_inherit;
 static float gyro_pitch_inherit;
 
@@ -621,9 +624,39 @@ static void remote_to_cmd_sbus(void)
     }
     if (gim_cmd.ctrl_mode==GIMBAL_AUTO)
     {
-        gim_cmd.yaw = 0;
-        gim_cmd.yaw_down += rc_now->ch4 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_YAW ;
-        gim_cmd.pitch = trans_fdb.pitch + 100* rc_now->ch3 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_PIT ;//上位机自瞄
+        static int8_t locked_flag = 0;
+        static float locked_time = 0;
+        if (dwt_get_time_ms() - locked_time > 500) //500ms后离开目标点【--
+            locked_flag = 0;
+        else
+            locked_flag = 1;
+
+        if(trans_fdb.roll == 0)  //扫描模式
+        {
+            gim_cmd.yaw += 0.08f;
+            gim_cmd.pitch = -8 + 10*sin(0.125*gim_cmd.yaw);
+            gim_cmd.yaw_down += rc_now->ch4 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_YAW ;
+            auto_yaw_inherit =gim_cmd.yaw; //考虑用auto扫描和auto自瞄两个变量分别储存扫描和自瞄情况下的yaw继承值
+            auto_pitch_inherit =gim_cmd.pitch;
+        }
+        else if (trans_fdb.roll == 1 || trans_fdb.roll == 2 )
+        {
+            if(trans_fdb.roll == 2)
+                locked_time = dwt_get_time_ms();
+            gim_cmd.yaw =  auto_yaw_inherit + trans_fdb.yaw;
+            gim_cmd.yaw_down += rc_now->ch4 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_YAW ;
+            gim_cmd.pitch = trans_fdb.pitch + 100* rc_now->ch3 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_PIT ;//上位机自瞄
+            // auto_yaw_inherit =gim_cmd.yaw;
+            // auto_pitch_inherit =gim_cmd.pitch;
+        }
+        else if (trans_fdb.roll == 0 && locked_flag == 1 )
+        {
+            gim_cmd.yaw = auto_yaw_inherit;
+            gim_cmd.yaw_down += rc_now->ch4 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_YAW ;
+            gim_cmd.pitch = auto_pitch_inherit + 100* rc_now->ch3 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_PIT ;//上位机自瞄
+
+        }
+
 
     }
     /* 限制云台角度 */

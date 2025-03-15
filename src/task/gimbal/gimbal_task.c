@@ -186,6 +186,13 @@ void gimbal_thread_entry(void *argument)
                 gim_motor_ref[YAW] = gim_cmd.yaw;
                 gim_motor_ref[PITCH] = gim_cmd.pitch;
                 gim_motor_ref[YAW_DOWN] = gim_cmd.yaw_down;
+                gim_motor_ref[YAW] = gim_cmd.yaw;
+                gim_motor_ref[PITCH] = gim_cmd.pitch;
+                gim_motor_ref[YAW_DOWN] = gim_cmd.yaw_down;
+            /*扫描模式下，像手动模式下一样更新offest角度，这样自瞄发过去的数据才对*/
+                if(trans_fdb.roll == 0)
+                    gim_fdb.yaw_offset_angle = ins_data.yaw;
+
                 // 底盘相对于云台归中值的角度，取负
                 gim_fdb.yaw_relative_angle = -yaw_down_motor_relive;
                 break;

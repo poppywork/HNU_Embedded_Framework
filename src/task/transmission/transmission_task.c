@@ -129,6 +129,7 @@ void transmission_task_entry(void* argument)
             heart_dt=dwt_get_time_ms();
         }
         Send_to_pc(rpy_tx_data);
+        //
 #ifndef BSP_USING_GIMBAL_CAN_RECEIVE
         Can_send(ins_data.gyro[2],ins_data.yaw_total_angle,send_msg[0]);
         Can_send(trans_fdb.angular_x,trans_fdb.angular_y,send_msg[1]);
@@ -235,6 +236,7 @@ static rt_err_t usb_input(rt_device_t dev, rt_size_t size)
                 if (rpy_rx_data.DATA[0]) {//相对角度控制
                     trans_fdb.yaw = -(*(int32_t *) &rpy_rx_data.DATA[1] / 1000.0);
                     trans_fdb.pitch = (*(int32_t *) &rpy_rx_data.DATA[5] / 1000.0);
+                    trans_fdb.roll = (*(int32_t *) &rpy_rx_data.DATA[9] / 1000.0);
                 }
                 else{//绝对角度控制
                     trans_fdb.yaw = -(*(int32_t *) &rpy_rx_data.DATA[1] / 1000.0);

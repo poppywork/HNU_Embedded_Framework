@@ -146,6 +146,7 @@ struct shoot_fdb_msg
      /*上位机自瞄数据*/
      float yaw;
      float pitch;
+     float roll;
      float yaw_down;
      float pitch_down;
      rt_uint8_t heartbeat;

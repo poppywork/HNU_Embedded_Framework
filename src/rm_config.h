@@ -118,11 +118,11 @@
 
 /* --------------------------------- 底盘PID参数 -------------------------------- */
 /* 电机速度环 */
-#define CHASSIS_KP_V_MOTOR              12
-#define CHASSIS_KI_V_MOTOR              22.6908896696549f
+#define CHASSIS_KP_V_MOTOR              5.5
+#define CHASSIS_KI_V_MOTOR              0
 #define CHASSIS_KD_V_MOTOR              0
-#define CHASSIS_INTEGRAL_V_MOTOR        8000
-#define CHASSIS_MAX_V_MOTOR             16000
+#define CHASSIS_INTEGRAL_V_MOTOR        0
+#define CHASSIS_MAX_V_MOTOR             16380
 // TODO: 参数待整定
 /* 跟随云台PID */
 #define CHASSIS_KP_V_FOLLOW             0.129999995f
@@ -154,25 +154,25 @@
 /*auto模式下的PID和手动模式PID参数实际上不能共用一套,要单独操作*/
 /* 云台yaw轴电机PID参数 */
 /* imu速度环 */
-#define YAW_KP_V_IMU             9000
+#define YAW_KP_V_IMU             5000
 #define YAW_KI_V_IMU             0
 #define YAW_KD_V_IMU             0.2f
 #define YAW_INTEGRAL_V_IMU       0
 #define YAW_MAX_V_IMU            30000
 /* imu角度环 */
-#define YAW_KP_A_IMU             0.490f
+#define YAW_KP_A_IMU             0.2f
 #define YAW_KI_A_IMU             0.0099f
 #define YAW_KD_A_IMU             0.0001f
 #define YAW_INTEGRAL_A_IMU       0
 #define YAW_MAX_A_IMU            25
 /* auto速度环 */
-#define YAW_KP_V_AUTO            9000
+#define YAW_KP_V_AUTO            5000
 #define YAW_KI_V_AUTO            0
 #define YAW_KD_V_AUTO            0.2f
 #define YAW_INTEGRAL_V_AUTO      0
 #define YAW_MAX_V_AUTO           30000
 /* auto角度环 */
-#define YAW_KP_A_AUTO            0.490f
+#define YAW_KP_A_AUTO            0.2f
 #define YAW_KI_A_AUTO            0.0099f
 #define YAW_KD_A_AUTO            0.0001f
 #define YAW_INTEGRAL_A_AUTO      0
@@ -194,7 +194,7 @@
 */
 
 /* imu角度环 */
-#define PITCH_KP_A_IMU           0.80f
+#define PITCH_KP_A_IMU           0.50f
 #define PITCH_KI_A_IMU           0
 #define PITCH_KD_A_IMU           0.002f
 #define PITCH_INTEGRAL_A_IMU     0.0f
@@ -214,27 +214,27 @@
 
 /* 下云台yaw_down轴电机PID参数 */
 /* imu速度环 */
-#define YAW_DOWN_KP_V_IMU             8000
+#define YAW_DOWN_KP_V_IMU             5000
 #define YAW_DOWN_KI_V_IMU             0
 #define YAW_DOWN_KD_V_IMU             0.0001f
 #define YAW_DOWN_INTEGRAL_V_IMU       0
 #define YAW_DOWN_MAX_V_IMU            30000
 /* imu角度环 */
-#define YAW_DOWN_KP_A_IMU             0.70f
+#define YAW_DOWN_KP_A_IMU             0.30f
 #define YAW_DOWN_KI_A_IMU             0
 #define YAW_DOWN_KD_A_IMU             0.0001f
 #define YAW_DOWN_INTEGRAL_A_IMU       0
 #define YAW_DOWN_MAX_A_IMU            25
 /* auto速度环 */
-#define YAW_DOWN_KP_V_AUTO            8000
+#define YAW_DOWN_KP_V_AUTO            5000
 #define YAW_DOWN_KI_V_AUTO            0
-#define YAW_DOWN_KD_V_AUTO            0.0001f
+#define YAW_DOWN_KD_V_AUTO            0.001f
 #define YAW_DOWN_INTEGRAL_V_AUTO      0
 #define YAW_DOWN_MAX_V_AUTO           30000
 /* auto角度环 */
-#define YAW_DOWN_KP_A_AUTO            0.70f
+#define YAW_DOWN_KP_A_AUTO            0.30f
 #define YAW_DOWN_KI_A_AUTO            0
-#define YAW_DOWN_KD_A_AUTO            0.0001f
+#define YAW_DOWN_KD_A_AUTO            0.00001f
 #define YAW_DOWN_INTEGRAL_A_AUTO      0
 #define YAW_DOWN_MAX_A_AUTO           25
 

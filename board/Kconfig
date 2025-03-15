@@ -380,6 +380,17 @@ menu "RoboMaster Algorithms"
     config BSP_USING_RAMP
        bool "Select USING Ramp"
        default y
+        menuconfig BSP_USING_CHASSIS_POWER_MODE
+            bool "Select USING CHASSIS_POWER_MODE"
+            default y
+            if BSP_USING_CHASSIS_POWER_MODE
+                config BSP_USING_POWER_LIMIT
+                    bool "Select POWER_LIMIT"
+                    default y
+                config BSP_USING_DEFAULT_MODE
+                    bool "Select DEFAULT MODE "
+                    default n
+            endif
 
 endmenu
 
