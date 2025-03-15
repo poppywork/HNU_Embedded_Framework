@@ -17,6 +17,7 @@ static struct gimbal_cmd_msg gim_cmd;
 static struct ins_msg ins_data;
 static struct gimbal_fdb_msg gim_fdb;
 static struct trans_fdb_msg trans_fdb;
+static struct referee_msg referee_data;
 /*------------------------------传输数据相关 --------------------------------- */
 #define RECV_BUFFER_SIZE 64  // 接收环形缓冲区大小
 rt_uint8_t *r_buffer_point; //用于清除环形缓冲区buffer的指针
@@ -34,6 +35,7 @@ RpyTypeDef rpy_tx_data={
 };
 RpyTypeDef rpy_rx_data; //接收解析结构体
 static rt_uint32_t heart_dt;
+TeamColor  team_color;
 /* ---------------------------------usb虚拟串口数据相关 --------------------------------- */
 static rt_device_t vs_port = RT_NULL;
 /* -------------------------------- 线程间通讯话题相关 ------------------------------- */
@@ -85,6 +87,8 @@ static void trans_pub_push(void)
 
 /* --------------------------------- 通讯线程入口 --------------------------------- */
 static float trans_dt;
+static float openfire;
+int8_t a;
 
 void transmission_task_entry(void* argument)
 {
@@ -99,9 +103,7 @@ void transmission_task_entry(void* argument)
     vs_port = rt_device_find("vcom");
     /* step2：打开串口设备。以中断接收及轮询发送模式打开串口设备*/
     if (vs_port)
-    {
         rt_device_open(vs_port, RT_DEVICE_FLAG_INT_RX);
-    }
     /*环形缓冲区初始化*/
     rt_ringbuffer_init(&receive_buffer, r_buffer, RECV_BUFFER_SIZE);
     /* 设置接收回调函数 */
@@ -109,6 +111,13 @@ void transmission_task_entry(void* argument)
     LOG_I("Transmission Task Start");
     /*清除buffer的指针赋地址*/
     r_buffer_point=r_buffer;
+
+
+    int flag = 0;
+    float pitch_auto_0 = 0.0f;
+    float pitch_auto_1 = 10.0f;
+    float yaw_auto_0 = 0.0f;
+    float yaw_auto_1 = 10.0f;
     while (1)
     {
         trans_start = dwt_get_time_ms();
@@ -119,8 +128,24 @@ void transmission_task_entry(void* argument)
 /*--------------------------------------------------具体需要发送的数据--------------------------------- */
         if((dwt_get_time_ms()-heart_dt)>=HEART_BEAT)
         {
-            rt_device_control(vs_port, RT_DEVICE_CTRL_RESUME, (void *) RT_DEVICE_FLAG_INT_TX);
+            // if(flag == 1)
+            // {
+            //     flag = 0;
+            //     trans_fdb.pitch = pitch_auto_0;
+            //     trans_fdb.yaw = yaw_auto_0;
+            // }
+            // else
+            // {
+            //     flag = 1;
+            //     trans_fdb.pitch = pitch_auto_1;
+            //     trans_fdb.yaw = yaw_auto_1;
+            // }
+            //
+            rt_device_close(vs_port);
+            rt_device_open(vs_port, RT_DEVICE_FLAG_INT_RX);
+            heart_dt=dwt_get_time_ms();
         }
+        judge_color();
         Send_to_pc(rpy_tx_data);
 /*--------------------------------------------------具体需要发送的数据---------------------------------*/
         /* 用于调试监测线程调度使用 */
@@ -134,7 +159,7 @@ void transmission_task_entry(void* argument)
 void Send_to_pc(RpyTypeDef data_r)
 {
     /*填充数据*/
-    pack_Rpy(&data_r, (gim_fdb.yaw_offset_angle - ins_data.yaw), ins_data.pitch-gim_fdb.pit_offset_angle, ins_data.roll);
+    pack_Rpy(&data_r, (gim_fdb.yaw_offset_angle - ins_data.yaw), ins_data.pitch-gim_fdb.pit_offset_angle, openfire,team_color);
     Check_Rpy(&data_r);
 
     rt_device_write(vs_port, 0, (uint8_t*)&data_r, sizeof(data_r));
@@ -144,7 +169,17 @@ void Send_to_pc(RpyTypeDef data_r)
     }
 }
 
-void pack_Rpy(RpyTypeDef *frame, float yaw, float pitch,float roll)
+void judge_color()
+{
+    referee_data.robot_status.robot_id = 103 ;   //以后在此处进行机器人id的赋值，即确定机器人颜色和种类
+    if(referee_data.robot_status.robot_id < 10)
+        team_color = RED;
+    else
+        team_color = BLUE;
+}
+
+
+void pack_Rpy(RpyTypeDef *frame, float yaw, float pitch,float openfire, int team_color)   //此处roll值作为开火标志位
 {
     int8_t rpy_tx_buffer[FRAME_RPY_LEN] = {0} ;
     int32_t rpy_data = 0;
@@ -161,13 +196,18 @@ void pack_Rpy(RpyTypeDef *frame, float yaw, float pitch,float roll)
     rpy_tx_buffer[6] = *gimbal_rpy >> 8;
     rpy_tx_buffer[7] = *gimbal_rpy >> 16;
     rpy_tx_buffer[8] = *gimbal_rpy >> 24;
-    rpy_data = roll *1000;
+    rpy_data = openfire *1000;
     rpy_tx_buffer[9] = *gimbal_rpy;
     rpy_tx_buffer[10] = *gimbal_rpy >> 8;
     rpy_tx_buffer[11] = *gimbal_rpy >> 16;
     rpy_tx_buffer[12] = *gimbal_rpy >> 24;
+    rpy_data = team_color *1000;
+    rpy_tx_buffer[13] = *gimbal_rpy;
+    rpy_tx_buffer[14] = *gimbal_rpy >> 8;
+    rpy_tx_buffer[15] = *gimbal_rpy >> 16;
+    rpy_tx_buffer[16] = *gimbal_rpy >> 24;
 
-    memcpy(&frame->DATA[0], rpy_tx_buffer,13);
+    memcpy(&frame->DATA[0], rpy_tx_buffer,17);
 
     frame->LEN = FRAME_RPY_LEN;
 }
@@ -196,6 +236,7 @@ void Check_Rpy(RpyTypeDef *frame)
 // 接收数据回调函数
 static rt_err_t usb_input(rt_device_t dev, rt_size_t size)
 {
+    a++;
     memset(buf, 0, sizeof(buf));
 
     // 从串口读取数据并保存到环形接收缓冲区
@@ -215,12 +256,13 @@ static rt_err_t usb_input(rt_device_t dev, rt_size_t size)
                 if (rpy_rx_data.DATA[0]) {//相对角度控制
                     trans_fdb.yaw =  -(*(int32_t *) &rpy_rx_data.DATA[1] / 1000.0);
                     trans_fdb.pitch =(*(int32_t *) &rpy_rx_data.DATA[5] / 1000.0);
-                    trans_fdb.roll =(*(int32_t *) &rpy_rx_data.DATA[9] / 1000.0);
+                    trans_fdb.roll = (*(int32_t *) &rpy_rx_data.DATA[9] / 1000.0);
                 }
                 else{//绝对角度控制
                     trans_fdb.yaw =  -(*(int32_t *) &rpy_rx_data.DATA[1] / 1000.0);
                     trans_fdb.pitch = (*(int32_t *) &rpy_rx_data.DATA[5] / 1000.0);
-                    trans_fdb.roll =(*(int32_t *) &rpy_rx_data.DATA[9] / 1000.0);
+                    trans_fdb.roll = (*(int32_t *) &rpy_rx_data.DATA[9] / 1000.0);
+
                 }
             }break;
             case HEARTBEAT:{

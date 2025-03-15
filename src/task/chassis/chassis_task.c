@@ -16,7 +16,7 @@
 
 /* -------------------------------- 线程间通讯话题相关 ------------------------------- */
 static struct chassis_cmd_msg chassis_cmd;
-static struct referee_fdb_msg referee_fdb;
+static struct referee_msg referee_fdb;
 static struct chassis_fdb_msg chassis_fdb;
 static struct ins_msg ins_data;
 
@@ -74,6 +74,7 @@ static struct chassis_real_speed_t
 }chassis_real_speed;
 /* --------------------------------- 底盘线程入口 --------------------------------- */
 static float cmd_dt;
+float follow_err,vw;
 
 void chassis_thread_entry(void *argument)
 {
@@ -106,11 +107,18 @@ void chassis_thread_entry(void *argument)
             }
             break;
         case CHASSIS_FOLLOW_GIMBAL:
-            chassis_cmd.vw = -pid_calculate(follow_pid, chassis_cmd.offset_angle, SIDEWAYS_ANGLE);
-            if(chassis_cmd.vw<0.2 && chassis_cmd.vw > -0.2)
+            follow_err = chassis_cmd.offset_angle;
+            if(follow_err < 5 && follow_err >= 0)
             {
-                chassis_cmd.vw=0;
+                chassis_cmd.offset_angle = follow_err * follow_err / 5;
             }
+            else if(follow_err < 0 && follow_err > -5)
+            {
+                chassis_cmd.offset_angle = -follow_err * follow_err / 5;
+            }
+
+            vw = -pid_calculate(follow_pid, chassis_cmd.offset_angle, SIDEWAYS_ANGLE);
+            chassis_cmd.vw = vw;
 
             /* 底盘运动学解算 */
             absolute_cal(&chassis_cmd, chassis_cmd.offset_angle);
@@ -164,7 +172,7 @@ static void chassis_pub_init(void)
 static void chassis_sub_init(void)
 {
     sub_cmd = sub_register("chassis_cmd", sizeof(struct chassis_cmd_msg));
-    sub_referee= sub_register("referee_fdb", sizeof(struct referee_fdb_msg));
+    sub_referee= sub_register("referee_fdb", sizeof(struct referee_msg));
     sub_ins = sub_register("ins_msg", sizeof(struct ins_msg));
 }
 
@@ -412,6 +420,9 @@ static void omni_calc(struct chassis_cmd_msg *cmd, int16_t* out_speed)
     wheel_rpm[1] = ( cmd->vx - cmd->vy + cmd->vw * (LENGTH_A + LENGTH_B)) * wheel_rpm_ratio;//forward
     wheel_rpm[2] = (-cmd->vx - cmd->vy + cmd->vw * (LENGTH_A + LENGTH_B)) * wheel_rpm_ratio;//right
     wheel_rpm[3] = (-cmd->vx + cmd->vy + cmd->vw * (LENGTH_A + LENGTH_B)) * wheel_rpm_ratio;//back
+    chassis_fdb.vw_ch = (chassis_motor[0]->measure.speed_rpm + chassis_motor[1]->measure.speed_rpm
+        + chassis_motor[2]->measure.speed_rpm  + chassis_motor[3]->measure.speed_rpm )
+    / (4.0f * wheel_rpm_ratio * LENGTH_RADIUS);
 
     memcpy(out_speed, wheel_rpm, 4*sizeof(int16_t));//copy the rpm to out_speed
 }
@@ -486,26 +497,26 @@ int TIM_Init(void)
     }
 }
 
-//static struct chassis_real_speed_t omni_get_speed(dji_motor_object_t *chassis_motor[4])//里程计计算函数。
-//{
-//
-//    float angle_hd = -(chassis_cmd.offset_angle/RADIAN_COEF);
-//    float wheel_rpm_ratio = 60.0f/(WHEEL_PERIMETER*CHASSIS_DECELE_RATIO);
-//
-//    int16_t wheel_rpm[4];
-//    for (int i = 0; i < 4; ++i)
-//    {
-//        wheel_rpm[i]=chassis_motor[i]->measure.speed_rpm;
-//    }
-//    struct chassis_real_speed_t real_speed;
-//    vw_ch =real_speed.chassis_vw_ch = (wheel_rpm[0] + wheel_rpm[1] + wheel_rpm[2] + wheel_rpm[3]) / (4.0f * wheel_rpm_ratio * LENGTH_RADIUS);
-//    vy_ch =real_speed.chassis_vy_ch = (wheel_rpm[0] + wheel_rpm[3] - wheel_rpm[1] - wheel_rpm[2]) / (4.0f * 0.7071f * wheel_rpm_ratio);
-//    vx_ch =real_speed.chassis_vx_ch = (wheel_rpm[0] + wheel_rpm[1] - wheel_rpm[2] - wheel_rpm[3]) / (4.0f * 0.7071f * wheel_rpm_ratio) ;
-//    vx_gim =real_speed.chassis_vx_gim =  real_speed.chassis_vx_ch* cos(angle_hd) - real_speed.chassis_vy_ch* sin(angle_hd);
-//    vy_gim =real_speed.chassis_vy_gim =  real_speed.chassis_vx_ch* sin(angle_hd) + real_speed.chassis_vy_ch* cos(angle_hd);
-//
-//    return real_speed;
-//}
+static struct chassis_real_speed_t omni_get_speed(dji_motor_object_t *chassis_motor[4])//里程计计算函数。
+{
+
+    float angle_hd = -(chassis_cmd.offset_angle/RADIAN_COEF);
+    float wheel_rpm_ratio = 60.0f/(WHEEL_PERIMETER*CHASSIS_DECELE_RATIO);
+
+    int16_t wheel_rpm[4];
+    for (int i = 0; i < 4; ++i)
+    {
+        wheel_rpm[i]=chassis_motor[i]->measure.speed_rpm;
+    }
+    struct chassis_real_speed_t real_speed;
+    vw_ch =real_speed.chassis_vw_ch = (wheel_rpm[0] + wheel_rpm[1] + wheel_rpm[2] + wheel_rpm[3]) / (4.0f * wheel_rpm_ratio * LENGTH_RADIUS);
+    vy_ch =real_speed.chassis_vy_ch = (wheel_rpm[0] + wheel_rpm[3] - wheel_rpm[1] - wheel_rpm[2]) / (4.0f * 0.7071f * wheel_rpm_ratio);
+    vx_ch =real_speed.chassis_vx_ch = (wheel_rpm[0] + wheel_rpm[1] - wheel_rpm[2] - wheel_rpm[3]) / (4.0f * 0.7071f * wheel_rpm_ratio) ;
+    vx_gim =real_speed.chassis_vx_gim =  real_speed.chassis_vx_ch* cos(angle_hd) - real_speed.chassis_vy_ch* sin(angle_hd);
+    vy_gim =real_speed.chassis_vy_gim =  real_speed.chassis_vx_ch* sin(angle_hd) + real_speed.chassis_vy_ch* cos(angle_hd);
+
+    return real_speed;
+}
 
 
 #ifdef BSP_CHASSIS_MECANUM_MODE

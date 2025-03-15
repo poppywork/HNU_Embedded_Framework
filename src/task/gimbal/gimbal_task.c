@@ -144,7 +144,7 @@ void gimbal_thread_entry(void *argument)
 
             //pitch轴改用丝杆结构，只能根据imu数据控制归中
             if(abs(ins_data.pitch) <= (20 / 22.75f)
-               && (abs(gim_motor[YAW]->measure.ecd - CENTER_ECD_YAW) <= 80)
+               && (abs(gim_motor[YAW]->measure.ecd - CENTER_ECD_YAW) <= 20)
                // 若长时间陷于归中模式，可以适当放宽归中条件
                || ((abs(ins_data.pitch) <= (200 / 22.75f))
                    && (abs(gim_motor[YAW]->measure.ecd - CENTER_ECD_YAW) <= 200)
@@ -308,17 +308,18 @@ static rt_int16_t motor_control_yaw(dji_motor_measure_t measure){
     case GIMBAL_GYRO:
         pid_speed = gim_controller[YAW].pid_speed_imu;
         pid_angle = gim_controller[YAW].pid_angle_imu;
+        // // 将imu零飘清0，无奈之举，期待imu零飘问题的解决
+        // if(get_speed < 0.5 && get_speed > -0.5)
+        // {
+        //     get_speed = 0;
+        // }
+        // if(get_angle < 0.5 && get_angle > -0.5)
+        // {
+        //     get_angle = 0;
+        // }
         get_speed = ins_data.gyro[Z];
         get_angle = ins_data.yaw_total_angle - gim_fdb.yaw_offset_angle_total;
-        // 将imu零飘清0，无奈之举，期待imu零飘问题的解决
-         // if(get_speed < 0.5 && get_speed > -0.5)
-         // {
-         //     get_speed = 0;
-         // }
-         // if(get_angle < 0.5 && get_angle > -0.5)
-         // {
-         //     get_angle = 0;
-         // }
+
         break;
     case GIMBAL_AUTO:
         pid_speed = gim_controller[YAW].pid_speed_auto;
@@ -340,17 +341,33 @@ static rt_int16_t motor_control_yaw(dji_motor_measure_t measure){
         pid_clear(gim_controller[YAW].pid_speed_auto);
     }
 
+
     if(gim_cmd.ctrl_mode == GIMBAL_INIT)  // 编码器闭环
     {
         /* 注意负号 */
+        pid_angle->ITerm =0;
+        pid_speed->ITerm =0;
+        if(pid_angle->Pout > 3)
+        {
+            pid_angle->Pout = 3;;
+        }
         pid_out_angle = pid_calculate(pid_angle, get_angle, gim_motor_ref[YAW]);  // 编码器增长方向与imu相反
+        if(pid_out_angle > 1)
+        {
+            pid_out_angle =1;
+        }
+        else if(pid_out_angle < -1)
+        {
+            pid_out_angle = -1;
+        }
         send_data = -pid_calculate(pid_speed, get_speed, pid_out_angle);     // 电机转动正方向与imu相反
     }
-    else /* imu闭环 */
+    else if(gim_cmd.ctrl_mode != GIMBAL_RELAX) /* imu闭环 */
     {
         /* 注意负号 */
         pid_out_angle = pid_calculate(pid_angle, get_angle, gim_motor_ref[YAW]);
-        send_data = pid_calculate(pid_speed, get_speed, pid_out_angle);      // 电机转动正方向与imu相反
+        // float feedforward = 500 * pid_out_angle; //+ 50 * filtered_accel  ; //简单估计前馈量
+        send_data = pid_calculate(pid_speed, get_speed, pid_out_angle);// + feedforward;      // 电机转动正方向与imu相反
     }
 
     return send_data;
