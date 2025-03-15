@@ -90,7 +90,7 @@ int robot_task_init(void)
     /* 创建线程，名称是 chassis ，入口是 chassis_thread_entry */
     chassis_thread_handle = rt_thread_create("chassis",
                                               chassis_thread_entry, RT_NULL,
-                                              1024,15, 10);
+                                              2048,15, 10);
     /* 如果获得线程控制块，启动这个线程 */
     if (chassis_thread_handle != RT_NULL)
         rt_thread_startup(chassis_thread_handle);
