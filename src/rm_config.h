@@ -156,8 +156,8 @@
 /* imu角度环 */
 #define YAW_KP_A_IMU             0.494710033270487f
 #define YAW_KI_A_IMU             0.218443192644351f
-#define YAW_KD_A_IMU             0
-#define YAW_INTEGRAL_A_IMU       0
+#define YAW_KD_A_IMU             0.0003
+#define YAW_INTEGRAL_A_IMU       4
 #define YAW_MAX_A_IMU            25
 /* auto速度环 */
 #define YAW_KP_V_AUTO            26000
@@ -224,7 +224,7 @@
 #define SBUS_FRICTION_AUTO_SPEED_H 7000
 
 /** DBUS遥控器发射速度 **/
-#define DBUS_FRICTION_LAUNCH_SPEED 8300
+#define DBUS_FRICTION_LAUNCH_SPEED 6600
 #define DBUS_SHOOT_REVERSE_SPEED 4000
 /** COUNTINUE模式参数 **/
 #define DBUS_FRICTION_AUTO_SPEED_L 2500  //拨弹电机转速
