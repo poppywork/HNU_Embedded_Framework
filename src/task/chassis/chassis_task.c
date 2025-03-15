@@ -208,7 +208,7 @@ static rt_int16_t motor_control_0(dji_motor_measure_t measure)
         chassis_max_current=8000;
     }
     set =(rt_int16_t) pid_calculate(chassis_controller[0].speed_pid, measure.speed_rpm, motor_ref[0]);
-    VAL_LIMIT(set , -chassis_max_current, chassis_max_current);
+    // VAL_LIMIT(set , -chassis_max_current, chassis_max_current);
     return set;
 }
 
@@ -238,7 +238,7 @@ static rt_int16_t motor_control_1(dji_motor_measure_t measure)
         chassis_max_current=8000;
     }
     set =(rt_int16_t) pid_calculate(chassis_controller[1].speed_pid, measure.speed_rpm, motor_ref[1]);
-    VAL_LIMIT(set , -chassis_max_current, chassis_max_current);
+    // VAL_LIMIT(set , -chassis_max_current, chassis_max_current);
     return set;
 }
 
@@ -267,7 +267,7 @@ static rt_int16_t motor_control_2(dji_motor_measure_t measure)
         chassis_max_current=8000;
     }
     set =(rt_int16_t) pid_calculate(chassis_controller[2].speed_pid, measure.speed_rpm, motor_ref[2]);
-    VAL_LIMIT(set , -chassis_max_current, chassis_max_current);
+    // VAL_LIMIT(set , -chassis_max_current, chassis_max_current);
     return set;
 }
 
@@ -296,7 +296,7 @@ static rt_int16_t motor_control_3(dji_motor_measure_t measure)
         chassis_max_current=8000;
     }
     set =(rt_int16_t) pid_calculate(chassis_controller[3].speed_pid, measure.speed_rpm, motor_ref[3]);
-    VAL_LIMIT(set , -chassis_max_current, chassis_max_current);
+    // VAL_LIMIT(set , -chassis_max_current, chassis_max_current);
     return set;
 }
 
