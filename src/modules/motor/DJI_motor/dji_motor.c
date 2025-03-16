@@ -15,7 +15,7 @@
 #define SPEED_SMOOTH_COEF 0.85f      // 最好大于0.85
 #define CURRENT_SMOOTH_COEF 0.9f     // 必须大于0.9
 #define ECD_ANGLE_COEF_DJI 0.043945f // (360/8192),将编码器值转化为角度制
-#define constant 1.02f
+#define constant 2.7f
 #define k_rpm 1.453e-07f
 #define k_current 1.23e-07f
 #define k_Torque 1.9968899e-06f
@@ -329,7 +329,7 @@ void dji_motor_control()
                         power_limit_out =power_limit_test;
                     }
                     //底盘功率限制单位转换
-                    if (power_all>power_limit_out && msg->power_heat_data.buffer_energy<70) {
+                    if (power_all>power_limit_out || msg->power_heat_data.buffer_energy<50) {
                         k_zoom = (float)power_limit_out / power_all;
                         for (int j = 0; j < 4; ++j)
                         {
