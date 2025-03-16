@@ -125,6 +125,7 @@ struct gimbal_fdb_msg
  {
      float x_pos_gim;
      float y_pos_gim;
+     float vw_ch;  // 底盘旋转速度
  };
 
 /* ------------------------------ shoot反馈状态数据 ------------------------------ */

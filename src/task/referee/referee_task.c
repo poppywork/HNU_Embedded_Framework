@@ -151,6 +151,8 @@ void referee_thread_entry(void *argument){
     refree_pub_init();
 
 
+
+
     /* USER CODE BEGIN DataAnalysisTask */
     Referee_system_Init(RX_AgreementData_Buffer0,RX_AgreementData_Buffer1,Agreement_RX_BUF_NUM);
 
@@ -160,8 +162,10 @@ void referee_thread_entry(void *argument){
 
         client_info_update();//识别自生红蓝,需要先提前设置兵种,判断相同兵种的红蓝状态
 
+
         Ui_Send();        // 发送更新UI
         Ui_Info_Update();
+
 
         if ((hdma_usart6_rx.Instance->CR & DMA_SxCR_CT) == RESET) {
             Referee_Data_Unpack(RX_AgreementData_Buffer0, &Referee_Data_header, &Referee_Data);
@@ -174,6 +178,7 @@ void referee_thread_entry(void *argument){
         memcpy(&(referee_data.game_status),&game_status, sizeof(game_status_t));
         memcpy(&(referee_data.game_robot_HP),&game_robot_HP, sizeof(game_robot_HP_t));
         memcpy(&(referee_data.event_data),&game_robot_HP, sizeof(event_data_t));
+
 
         refree_pub_push(); // 发布数据更新
         rt_thread_mdelay(1);

@@ -16,7 +16,7 @@
 #include <rtdbg.h>
 
 static publisher_t *pub_gim, *pub_chassis, *pub_shoot;
-static subscriber_t *sub_gim, *sub_shoot,*sub_trans,*sub_ins,*sub_referee;
+static subscriber_t *sub_gim, *sub_shoot,*sub_trans,*sub_ins,*sub_referee,*sub_chassis;
 static struct gimbal_cmd_msg gim_cmd;
 static struct gimbal_fdb_msg gim_fdb;
 static struct shoot_cmd_msg  shoot_cmd;
@@ -25,6 +25,7 @@ static struct chassis_cmd_msg chassis_cmd;
 static struct trans_fdb_msg  trans_fdb;
 static struct ins_msg ins_data;
 static struct referee_msg referee_fdb;
+
 
 static rc_dbus_obj_t *rc_now, *rc_last;
 
@@ -41,6 +42,8 @@ static int mirror_servo_flag=0;
 /*部署模式标志位*/
 static int deploy_flag = 0;
 static int cnt_flag=0;
+/*小陀螺堵塞计次*/
+static int spin_cnt=0;
 /*自瞄鼠标累计操作值*/
 static float mouse_accumulate_x=0;
 static float mouse_accumulate_y=0;
@@ -159,6 +162,7 @@ static void cmd_sub_init(void)
     sub_trans= sub_register("trans_fdb", sizeof(struct trans_fdb_msg));
     sub_ins = sub_register("ins_msg", sizeof(struct ins_msg));
     sub_referee= sub_register("referee_fdb",sizeof(struct referee_msg));
+
 }
 
 
@@ -172,6 +176,7 @@ static void cmd_sub_pull(void)
     sub_get_msg(sub_trans,&trans_fdb);
     sub_get_msg(sub_ins, &ins_data);
     sub_get_msg(sub_referee, &referee_fdb);
+    sub_get_msg(sub_chassis, &chassis_fdb);
 }
 
 /* ------------------------------ 将遥控器数据转换为控制指令 ----------------------------- */
@@ -421,15 +426,19 @@ static void remote_to_cmd_pc_DT7(void)
     }
     if (gim_cmd.ctrl_mode==GIMBAL_AUTO)
     {
-        if (auto_relative_angle_status==RELATIVE_ANGLE_TRANS || gim_cmd.last_mode!=GIMBAL_AUTO)
+        if (auto_relative_angle_status==RELATIVE_ANGLE_TRANS)
         {
             trans_fdb.yaw=0;
             trans_fdb.pitch=0;
         }
          //mouse_accumulate_x+=fx * KB_RATIO * GIMBAL_PC_MOVE_RATIO_YAW; /*鼠标x轴的自瞄补偿，测试结果建议注释掉暂不使用*/
         mouse_accumulate_y-=fy * KB_RATIO * GIMBAL_PC_MOVE_RATIO_PIT;
-        gim_cmd.yaw = trans_fdb.yaw+gyro_yaw_inherit + mouse_accumulate_x/* + 150 * rc_now->ch3 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_YAW*/;//上位机自瞄
-        gim_cmd.pitch = trans_fdb.pitch+gyro_pitch_inherit + mouse_accumulate_y/* +100 * rc_now->ch4 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_PIT */;//上位机自瞄
+        if(trans_fdb.roll != 2)
+        {
+            gim_cmd.yaw = trans_fdb.yaw+gyro_yaw_inherit + mouse_accumulate_x/* + 150 * rc_now->ch3 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_YAW*/;//上位机自瞄
+            gim_cmd.pitch = trans_fdb.pitch+gyro_pitch_inherit + mouse_accumulate_y/* +100 * rc_now->ch4 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_PIT */;//上位机自瞄
+        }
+
     }
 
       /*!限制云台pitch轴角度 */
@@ -447,7 +456,7 @@ static void remote_to_cmd_pc_DT7(void)
     /*!如果鼠标未按下右键*/
     if (rc_now->mouse.r==0)
     {
-        if (gim_cmd.last_mode == GIMBAL_RELAX || gim_cmd.last_mode == GIMBAL_AUTO)
+        if (gim_cmd.last_mode == GIMBAL_RELAX)
         {/* 判断上次状态是否为RELAX，是则先归中 */
             gim_cmd.ctrl_mode = GIMBAL_INIT;
             chassis_cmd.ctrl_mode=CHASSIS_RELAX;
@@ -512,8 +521,19 @@ static void remote_to_cmd_pc_DT7(void)
     }
     if (chassis_cmd.ctrl_mode==CHASSIS_SPIN)
     {
-        chassis_cmd.vw=5;//4.5+2*referee_fdb.robot_status.chassis_power_limit/60;/*!小陀螺转速，随着功率限制提升加快转速*/
+        chassis_cmd.vw=1.2;//4.5+2*referee_fdb.robot_status.chassis_power_limit/60;/*!小陀螺转速，随着功率限制提升加快转速*/
+        if(chassis_fdb.vw_ch < 1.15) //当小陀螺被堵住时，自动退出小陀螺模式
+        {
+            spin_cnt++;
+            if(spin_cnt>3000)
+            {
+                chassis_cmd.ctrl_mode = CHASSIS_FOLLOW_GIMBAL;
+                spin_cnt=0;
+            }
+        }
+
     }
+
     /*TODO:--------------------------------------------------发射模块状态机--------------------------------------------------------------*/
     /*!-----------------------------------------开关摩擦轮--------------------------------------------*/
     /*-----------------------------------------开关摩擦轮--------------------------------------------*/
@@ -569,10 +589,15 @@ static void remote_to_cmd_pc_DT7(void)
     // else
 
         //连发模式
-        if((rc_now->mouse.l==1||rc_now->wheel <= -300)&&(shoot_cmd.friction_status==1)/*&&(referee_fdb.power_heat_data.shooter_17mm_1_barrel_heat < (referee_fdb.robot_status.shooter_barrel_heat_limit-10))*/)
+        if((km.v_sta != KEY_RELEASE && km.v_sta != KEY_WAIT_EFFECTIVE)
+            ||(rc_now->wheel <= -300)
+            /*&&(referee_fdb.power_heat_data.shooter_17mm_1_barrel_heat < (referee_fdb.robot_status.shooter_barrel_heat_limit-10))*/)
         {
-            shoot_cmd.ctrl_mode=SHOOT_COUNTINUE;
-            shoot_cmd.shoot_freq=2000;
+            if(shoot_cmd.friction_status==1)
+            {
+                shoot_cmd.ctrl_mode=SHOOT_COUNTINUE;
+                shoot_cmd.shoot_freq=2000;
+            }
         }
         //开启摩擦轮默认进入单发模式,首先判断鼠标左键键是否按下或者拨轮是否向下，标记开火标志位
         else if(km.lk_sta == KEY_PRESS_ONCE || rc_now->wheel>=400 &&(shoot_cmd.friction_status==1))
@@ -655,10 +680,11 @@ static void remote_to_cmd_pc_DT7(void)
     }
     /*----------------------------------------------------------------使能判断---------------------------------------------------------------*/
 
-    if(rc_now->wheel == 660 && rc_now->sw2==RC_MI)
+    //关闭云台接口，便于调试
+    if(rc_now->wheel >= 600 && rc_now->sw2==RC_MI)
     {
         cnt_flag++;
-        if(cnt_flag >= 1000)
+        if(cnt_flag >=800)
         {
             cnt_flag =0;
             if(deploy_flag == 0)
@@ -673,11 +699,7 @@ static void remote_to_cmd_pc_DT7(void)
     }
     if(deploy_flag == 1)
     {
-
-
-
         chassis_cmd.ctrl_mode = CHASSIS_RELAX;
-
     }
 
 

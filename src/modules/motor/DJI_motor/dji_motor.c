@@ -11,12 +11,14 @@
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
 float power__all=0;
+int power_limit =0;
+int powerlimit = 60;
 #define DJI_MOTOR_CNT 14             // 默认波特率下，实测挂载电机极限数量
 /* 滤波系数设置为1的时候即关闭滤波 */
 #define SPEED_SMOOTH_COEF 0.85f      // 最好大于0.85
 #define CURRENT_SMOOTH_COEF 0.9f     // 必须大于0.9
 #define ECD_ANGLE_COEF_DJI 0.043945f // (360/8192),将编码器值转化为角度制
-#define  constant 0.675f//2650
+#define  constant 4//2650
 #define k_rpm 1.453e-07//0.001651
 #define k_current 1.23e-07//0.000000001721
 #define k_Torque 1.997e-06f
@@ -28,6 +30,7 @@ static rt_device_t chassis_can, gimbal_can;
 
 // TODO: 0x2ff容易发送失败
 /**
+ *
  *
  * @brief 由于DJI电机发送以四个一组的形式进行,故对其进行特殊处理,用6个(2can*3group)can_object专门负责发送
  *        该变量将在 dji_motor_control() 中使用,分组在 motor_send_grouping()中进行
@@ -265,7 +268,7 @@ void dji_motor_control()
          motor = dji_motor_obj[i];
          measure = motor->measure;
          //当电机为底盘电机，即挂载在can1总线且为3508电机，使用底盘功率限制，其余正常填入报文
-             if ((motor->motor_type==M3508)&&(motor->can_dev->parent.name[3]==49))
+             if ((motor->motor_type==M3508)&&(motor->can_dev== chassis_can))
              {
             switch (motor->rx_id) {
                 case 0x201:
@@ -312,26 +315,32 @@ void dji_motor_control()
                                motor->measure.speed_rpm * set1[3] * k_Torque + constant;
                     // 计算全局功率限制系数
                     for (int j = 0; j < 4; ++j)
-                    { power_all += power[j];
+                    {
 
                         if(power[j]>0) {
-
+                            power_all += power[j];
                         }
                     }
                     power__all=power_all; //用于观察与裁判系统读取功率的拟合效果
-                    int powerlimit = 50;
-                    int power_limit = referee_fdb.robot_status.chassis_power_limit;
+
+                     power_limit = referee_fdb.robot_status.chassis_power_limit;
                     if (power_limit >=50 && power_limit <=120){
-                        powerlimit = power_limit;
+                        powerlimit =power_limit;
                     }
                     //底盘功率限制单位转换
                     if (power_all>powerlimit) {
-                        k_zoom = powerlimit / power_all;
-                        for (int j = 0; j < 4; ++j)
-                        {
+                        k_zoom = 120 / power_all;
+
+                        for (int j = 0; j < 4; ++j){
+                            if (power[j]<0)
+                            {
+                                continue;
+                            }
+
                             power[j] = k_zoom * power[j] - k_rpm * rpm[j] * rpm[j] - constant;
                             if (set1[j] >= 0) {
                                 set1[j] = (-k_Torque * rpm[j] +sqrt(k_Torque * rpm[j] * k_Torque * rpm[j] + 4 * power[j] * k_current)) /(2 * k_current);
+
                                 if (set1[j]>16000){
                                     set1[j]=16000;
                                 }
@@ -339,6 +348,7 @@ void dji_motor_control()
                                 set1[j] = (-k_Torque * rpm[j] -sqrt(k_Torque * rpm[j] * k_Torque * rpm[j] + 4 * power[j] * k_current)) /(2 * k_current);
                                 if (set1[j]<-16000){
                                     set1[j]=-16000;
+
                                 }
                             }
                         }
