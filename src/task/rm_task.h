@@ -139,27 +139,33 @@ struct shoot_fdb_msg
 
 /* ------------------------------ transmission反馈状态数据 ------------------------------ */
 /**
- * @brief 上位机反馈状态数据,由transmission发布
+ * @brief 下云台c板反馈状态数据,由transmission发布
  */
  struct trans_fdb_msg
- { // 云台自瞄角度控制
+ {
+     /*上位机自瞄数据*/
      float yaw;
      float pitch;
-     float ins_low_yaw;
-     float ins_low_pitch;
-     float ins_low_roll;
-     float linear_x;
-     float linear_y;
-     float linear_z;
-     float angular_x;
-     float angular_y;
-     float angular_z;
-     rt_uint8_t heartbeat;
      float yaw_down;
      float pitch_down;
+     rt_uint8_t heartbeat;
+     /*上位机导航数据*/
+     float linear_x;
+     float linear_y;
+     float linear_z;//标志位
+     //float angular_x;
+     //float angular_y;
+     float angular_z;
+     float angular_z_degree;
+     /*下云台yaw_down电机反馈状态数据*/
      float yaw_down_total_angle;
      float gyro_down_z;
-     float gyro_down_anger_z;
+     /*下C板中转referee反馈状态数据*/
+     uint16_t chassis_power_limit;
+     uint16_t chassis_buffer_energy;
+     uint8_t robot_id;
+     uint8_t game_progress;
+     uint16_t shooter_17mm_cooling_heat;
  };
  /* ------------------------------ referee反馈状态数据 ------------------------------ */
 /**
