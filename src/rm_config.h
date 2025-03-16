@@ -217,7 +217,7 @@
 
 
 /** DBUS遥控器发射速度 **/
-#define DBUS_FRICTION_LAUNCH_SPEED 6000
+#define DBUS_FRICTION_LAUNCH_SPEED 6000 //根据现场子弹初速微调
 #define DBUS_SHOOT_REVERSE_SPEED 4000
 /** COUNTINUE模式参数 **/
 #define DBUS_FRICTION_AUTO_SPEED_L 4500  //拨弹电机转速
