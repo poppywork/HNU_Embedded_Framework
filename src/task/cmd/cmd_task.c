@@ -643,7 +643,14 @@ static void remote_to_cmd_sbus(void)
     case RC_UP:
         if(gim_cmd.ctrl_mode != GIMBAL_INIT && gim_cmd.ctrl_mode != GIMBAL_RELAX)
         {
-            chassis_cmd.ctrl_mode = CHASSIS_FOLLOW_GIMBAL;
+            if(trans_fdb.linear_z == 1 && gim_cmd.ctrl_mode == GIMBAL_AUTO)
+            {
+                chassis_cmd.ctrl_mode = CHASSIS_SPIN;
+                chassis_cmd.vw = (float) (rc_now->ch5) / RC_MAX_VALUE * ROTATE_RATIO_VW; // 小陀螺转速
+            } else
+            {
+                chassis_cmd.ctrl_mode = CHASSIS_FOLLOW_GIMBAL;
+            }
         }
         else
         {
