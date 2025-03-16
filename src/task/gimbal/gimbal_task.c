@@ -470,7 +470,7 @@ static rt_int16_t motor_control_yaw_down(dji_motor_measure_t measure){
         if(gim_cmd.ctrl_mode == GIMBAL_AUTO)
         {
             pid_out_angle = pid_calculate(pid_angle, get_angle, gim_motor_ref[YAW_DOWN]);
-            send_data = -pid_calculate(pid_speed, get_speed, trans_fdb.angular_z * RADIAN_COEF);
+            send_data = -pid_calculate(pid_speed, get_speed, pid_out_angle/*angular_z_degree*/);
         }
     }
     return send_data;

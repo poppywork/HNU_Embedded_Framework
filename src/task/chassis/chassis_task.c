@@ -17,11 +17,11 @@
 /* -------------------------------- 线程间通讯话题相关 ------------------------------- */
 static struct chassis_cmd_msg chassis_cmd;
 static struct chassis_fdb_msg chassis_fdb;
-static struct referee_fdb_msg referee_fdb;
+static struct trans_fdb_msg trans_fdb;
 static struct ins_msg ins_data;
 
 static publisher_t *pub_chassis;
-static subscriber_t *sub_cmd,*sub_ins,*sub_referee;;
+static subscriber_t *sub_cmd,*sub_ins,*sub_trans;
 
 static void chassis_pub_init(void);
 static void chassis_sub_init(void);
@@ -155,7 +155,7 @@ static void chassis_pub_init(void)
 static void chassis_sub_init(void)
 {
     sub_cmd = sub_register("chassis_cmd", sizeof(struct chassis_cmd_msg));
-    sub_referee= sub_register("referee_fdb", sizeof(struct referee_fdb_msg));
+    sub_trans= sub_register("trans_fdb", sizeof(struct trans_fdb_msg));
     sub_ins = sub_register("ins_msg", sizeof(struct ins_msg));
 }
 
@@ -172,7 +172,7 @@ static void chassis_pub_push(void)
 static void chassis_sub_pull(void)
 {
     sub_get_msg(sub_cmd, &chassis_cmd);
-    sub_get_msg(sub_referee, &referee_fdb);
+    sub_get_msg(sub_trans, &trans_fdb);
     sub_get_msg(sub_ins, &ins_data);
 }
 
@@ -184,15 +184,15 @@ static rt_int16_t motor_control_0(dji_motor_measure_t measure)
     static int16_t chassis_max_current=0;
     static int16_t chassis_power_limit=0;
     /*传参给局部变量防止被更改抽风*/
-    chassis_power_limit=(int16_t)referee_fdb.robot_status.chassis_power_limit;
+    chassis_power_limit=(int16_t)trans_fdb.chassis_power_limit;
     /*底盘功率限制防止buffer溢出*/
     if(chassis_power_limit>=120)
     {
         chassis_power_limit=120;
     }
-    if(referee_fdb.power_heat_data.buffer_energy<20)
+    if(trans_fdb.chassis_buffer_energy<20)
     {
-        chassis_max_current=chassis_power_limit*CURRENT_POWER_LIMIT_RATE*(referee_fdb.power_heat_data.buffer_energy/50);
+        chassis_max_current=chassis_power_limit*CURRENT_POWER_LIMIT_RATE*(trans_fdb.chassis_buffer_energy/50);
     }
     else
     {
@@ -213,15 +213,15 @@ static rt_int16_t motor_control_1(dji_motor_measure_t measure)
     static int16_t chassis_max_current=0;
     static int16_t chassis_power_limit=0;
     /*传参给局部变量防止被更改抽风*/
-    chassis_power_limit=(int16_t)referee_fdb.robot_status.chassis_power_limit;
+    chassis_power_limit=(int16_t)trans_fdb.chassis_power_limit;
     /*底盘功率限制防止buffer溢出*/
     if(chassis_power_limit>=120)
     {
         chassis_power_limit=120;
     }
-    if(referee_fdb.power_heat_data.buffer_energy<20)
+    if(trans_fdb.chassis_buffer_energy<20)
     {
-        chassis_max_current=chassis_power_limit*CURRENT_POWER_LIMIT_RATE*(referee_fdb.power_heat_data.buffer_energy/50);
+        chassis_max_current=chassis_power_limit*CURRENT_POWER_LIMIT_RATE*(trans_fdb.chassis_buffer_energy/50);
     }
     else
     {
@@ -242,15 +242,15 @@ static rt_int16_t motor_control_2(dji_motor_measure_t measure)
     static int16_t chassis_max_current=0;
     static int16_t chassis_power_limit=0;
     /*传参给局部变量防止被更改抽风*/
-    chassis_power_limit=(int16_t)referee_fdb.robot_status.chassis_power_limit;
+    chassis_power_limit=(int16_t)trans_fdb.chassis_power_limit;
     /*底盘功率限制防止buffer溢出*/
     if(chassis_power_limit>=120)
     {
         chassis_power_limit=120;
     }
-    if(referee_fdb.power_heat_data.buffer_energy<20)
+    if(trans_fdb.chassis_buffer_energy<20)
     {
-        chassis_max_current=chassis_power_limit*CURRENT_POWER_LIMIT_RATE*(referee_fdb.power_heat_data.buffer_energy/50);
+        chassis_max_current=chassis_power_limit*CURRENT_POWER_LIMIT_RATE*(trans_fdb.chassis_buffer_energy/50);
     }
     else
     {
@@ -271,15 +271,15 @@ static rt_int16_t motor_control_3(dji_motor_measure_t measure)
     static int16_t chassis_max_current=0;
     static int16_t chassis_power_limit=0;
     /*传参给局部变量防止被更改抽风*/
-    chassis_power_limit=(int16_t)referee_fdb.robot_status.chassis_power_limit;
+    chassis_power_limit=(int16_t)trans_fdb.chassis_power_limit;
     /*底盘功率限制防止buffer溢出*/
     if(chassis_power_limit>=120)
     {
         chassis_power_limit=120;
     }
-    if(referee_fdb.power_heat_data.buffer_energy<20)
+    if(trans_fdb.chassis_buffer_energy<20)
     {
-        chassis_max_current=chassis_power_limit*CURRENT_POWER_LIMIT_RATE*(referee_fdb.power_heat_data.buffer_energy/50);
+        chassis_max_current=chassis_power_limit*CURRENT_POWER_LIMIT_RATE*(trans_fdb.chassis_buffer_energy/50);
     }
     else
     {
