@@ -59,6 +59,13 @@ static int key_q_status=-1;
 static int key_v_status=-1;
 /*用于清除环形缓冲区buffer的指针*/
 extern rt_uint8_t *r_buffer_point;
+
+
+/*哨兵*/
+/*打击方向检测*/
+static float getarmor_hurt_direction(struct referee_fdb_msg *referee_fdb);
+
+
 /* ------------------------------- 遥控数据转换为控制指令 ------------------------------ */
 static void remote_to_cmd_sbus(void);
 static void remote_to_cmd_dbus(void);
@@ -616,8 +623,8 @@ static void remote_to_cmd_sbus(void)
     /*云台命令*/
     if (gim_cmd.ctrl_mode==GIMBAL_GYRO)
     {
-        gim_cmd.yaw += rc_now->ch4 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_YAW ;
-        gim_cmd.yaw_down = 0;
+        //不对yaw控制，使其维持在前面的值
+        gim_cmd.yaw_down += rc_now->ch4 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_YAW ;
         gim_cmd.pitch += rc_now->ch3 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_PIT ;
         gyro_yaw_inherit =gim_cmd.yaw;
         gyro_pitch_inherit =ins_data.pitch;
@@ -633,21 +640,30 @@ static void remote_to_cmd_sbus(void)
 
         if(trans_fdb.roll == 0)  //扫描模式
         {
-            gim_cmd.yaw += 0.08f;
-            gim_cmd.pitch = -8 + 10*sin(0.125*gim_cmd.yaw);
+            // if (gim_cmd.yaw >= 90.0f) {
+            //     saomiao_direction = -1;
+            //     gim_cmd.yaw = 90.0f; // Clamp to 90.0 if it exceeds
+            // } else if (gim_cmd.yaw <= -90.0f) {
+            //     saomiao_direction = 1;
+            //     gim_cmd.yaw = -90.0f; // Clamp to -90.0 if it goes below
+            // }
+            gim_cmd.yaw += (float)saomiao_direction * 0.16f + getarmor_hurt_direction(&referee_fdb) ;/*打击方向检测*/
+;
+            gim_cmd.pitch = -10 + 10*sin(0.0675*gim_cmd.yaw);
             gim_cmd.yaw_down += rc_now->ch4 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_YAW ;
-            auto_yaw_inherit =gim_cmd.yaw; //考虑用auto扫描和auto自瞄两个变量分别储存扫描和自瞄情况下的yaw继承值
-            auto_pitch_inherit =gim_cmd.pitch;
+            auto_saomiao_yaw_inherit =ins_data.yaw_total_angle - gim_fdb.yaw_offset_angle_total; //考虑用auto扫描和auto自瞄两个变量分别储存扫描和自瞄情况下的yaw继承值
+            auto_saomiao_pitch_inherit =gim_cmd.pitch;
+            // offest_yaw_gyro_to_auto_angle = gim_cmd.yaw - gim_fdb.yaw_offset_angle;
         }
         else if (trans_fdb.roll == 1 || trans_fdb.roll == 2 )
         {
             if(trans_fdb.roll == 2)
                 locked_time = dwt_get_time_ms();
-            gim_cmd.yaw =  auto_yaw_inherit + trans_fdb.yaw;
+            gim_cmd.yaw =  auto_saomiao_yaw_inherit + trans_fdb.yaw;
             gim_cmd.yaw_down += rc_now->ch4 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_YAW ;
             gim_cmd.pitch = trans_fdb.pitch + 100* rc_now->ch3 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_PIT ;//上位机自瞄
-            // auto_yaw_inherit =gim_cmd.yaw;
-            // auto_pitch_inherit =gim_cmd.pitch;
+            auto_yaw_inherit = gim_cmd.yaw;
+            auto_pitch_inherit =gim_cmd.pitch;
         }
         else if (trans_fdb.roll == 0 && locked_flag == 1 )
         {
@@ -806,16 +822,28 @@ static void remote_to_cmd_sbus(void)
     // TODO: 添加弹频和弹速控制
     if (rc_now->ch6>0)
     {
-        shoot_cmd.shoot_freq = rc_now->ch6 / RC_MAX_VALUE*10;//连发模式拨弹电机转速
+        if((trans_fdb.roll == 1 && gim_cmd.ctrl_mode==GIMBAL_AUTO) || gim_cmd.ctrl_mode==GIMBAL_GYRO )  //最下方一块为自动扳机
+        {
+            shoot_cmd.shoot_freq = rc_now->ch6 / RC_MAX_VALUE*10;//连发模式拨弹电机转速
+        }
     }
-    else if(rc_now->ch6<=-775)
+    else   //小于0不发射   往上方最大的一块
     {
-         shoot_cmd.cover_open=1;
+        shoot_cmd.shoot_freq = 0;
+    }
+}
+
+//打击方向检测
+static float getarmor_hurt_direction(struct referee_fdb_msg *referee_fdb)
+{
+    if(referee_fdb->hurt_data.HP_deduction_reason == 0) //受攻击扣血时
+    {
+        int8_t armor_id = referee_fdb->hurt_data.armor_id;
+        float yaw_offest_total_angle_to_chassis = saomiao_direction * (-45.0f + 90.0f * armor_id);
+        return yaw_offest_total_angle_to_chassis;
     }
     else
-    {
-         shoot_cmd.cover_open=0;
-    }
+        return 0.0f;
 }
 #endif/* WHEEL_OMNI_INFANTRY */
 #ifdef WHEEL_OMNI_SENTRY
