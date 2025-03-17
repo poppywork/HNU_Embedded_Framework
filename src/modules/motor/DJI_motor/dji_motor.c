@@ -342,6 +342,9 @@ void dji_motor_control()
                             power[j] = k_zoom * power[j] - k_rpm * rpm[j] * rpm[j] - constant;
                             if (set1[j] >= 0) {
                                 set1[j] = (-k_Torque * rpm[j] +sqrt(k_Torque * rpm[j] * k_Torque * rpm[j] + 4 * power[j] * k_current)) /(2 * k_current);
+
+
+
                                 if (set1[j]>16000){
                                     set1[j]=16000;
                                 }
@@ -349,6 +352,9 @@ void dji_motor_control()
                                 set1[j] = (-k_Torque * rpm[j] -sqrt(k_Torque * rpm[j] * k_Torque * rpm[j] + 4 * power[j] * k_current)) /(2 * k_current);
                                 if (set1[j]<-16000){
                                     set1[j]=-16000;
+
+
+
                                 }
                             }
                         }

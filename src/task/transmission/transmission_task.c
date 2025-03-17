@@ -16,8 +16,11 @@
 static struct gimbal_cmd_msg gim_cmd;
 static struct ins_msg ins_data;
 static struct gimbal_fdb_msg gim_fdb;
-static struct trans_fdb_msg trans_fdb;
-static struct referee_msg referee_data;
+
+static struct referee_msg refree_fdb;
+
+TeamColor  team_color;
+
 /*------------------------------传输数据相关 --------------------------------- */
 #define RECV_BUFFER_SIZE 64  // 接收环形缓冲区大小
 rt_uint8_t *r_buffer_point; //用于清除环形缓冲区buffer的指针
@@ -88,7 +91,7 @@ static void trans_pub_push(void)
 /* --------------------------------- 通讯线程入口 --------------------------------- */
 static float trans_dt;
 static float openfire;
-int8_t a;
+
 
 void transmission_task_entry(void* argument)
 {
@@ -113,11 +116,6 @@ void transmission_task_entry(void* argument)
     r_buffer_point=r_buffer;
 
 
-    int flag = 0;
-    float pitch_auto_0 = 0.0f;
-    float pitch_auto_1 = 10.0f;
-    float yaw_auto_0 = 0.0f;
-    float yaw_auto_1 = 10.0f;
     while (1)
     {
         trans_start = dwt_get_time_ms();
@@ -125,22 +123,12 @@ void transmission_task_entry(void* argument)
         trans_sub_pull();
         /* 发布数据更新 */
         trans_pub_push();
+
+        judge_color();//判断红蓝
 /*--------------------------------------------------具体需要发送的数据--------------------------------- */
         if((dwt_get_time_ms()-heart_dt)>=HEART_BEAT)
         {
-            // if(flag == 1)
-            // {
-            //     flag = 0;
-            //     trans_fdb.pitch = pitch_auto_0;
-            //     trans_fdb.yaw = yaw_auto_0;
-            // }
-            // else
-            // {
-            //     flag = 1;
-            //     trans_fdb.pitch = pitch_auto_1;
-            //     trans_fdb.yaw = yaw_auto_1;
-            // }
-            //
+
             rt_device_close(vs_port);
             rt_device_open(vs_port, RT_DEVICE_FLAG_INT_RX);
             heart_dt=dwt_get_time_ms();
@@ -156,6 +144,15 @@ void transmission_task_entry(void* argument)
     }
 }
 
+void judge_color()
+{
+    if(refree_fdb.robot_status.robot_id < 10)
+
+        team_color = RED;
+    else
+        team_color = BLUE;
+}
+
 void Send_to_pc(RpyTypeDef data_r)
 {
     /*填充数据*/
@@ -167,15 +164,6 @@ void Send_to_pc(RpyTypeDef data_r)
     {
        auto_relative_angle_status=RELATIVE_ANGLE_OK;
     }
-}
-
-void judge_color()
-{
-    referee_data.robot_status.robot_id = 103 ;   //以后在此处进行机器人id的赋值，即确定机器人颜色和种类
-    if(referee_data.robot_status.robot_id < 10)
-        team_color = RED;
-    else
-        team_color = BLUE;
 }
 
 
