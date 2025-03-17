@@ -15,7 +15,7 @@
 #define SPEED_SMOOTH_COEF 0.85f      // 最好大于0.85
 #define CURRENT_SMOOTH_COEF 0.9f     // 必须大于0.9
 #define ECD_ANGLE_COEF_DJI 0.043945f // (360/8192),将编码器值转化为角度制
-#define constant 4.081f
+#define constant 1.02f
 #define k_rpm 1.453e-07f
 #define k_current 1.23e-07f
 #define k_Torque 1.99689e-06f
@@ -268,6 +268,8 @@ void dji_motor_control()
         //当电机为底盘电机，即挂载在can1总线且为3508电机，使用底盘功率限制，其余正常填入报文
         if ((motor->motor_type==M3508)&&(motor->can_dev == chassis_can))
         {
+            static float estimated_buffer_energy = 60.0f;      // 当前估计的缓冲能量
+            static uint32_t last_feedback_time = 0;            // 上次反馈时间戳
             switch (motor->rx_id)
             {
                 case 0x201:
@@ -294,6 +296,7 @@ void dji_motor_control()
                         }
                         power__all=power_all; //用于观察与裁判系统读取功率的拟合效果
                         struct referee_msg *msg = get_power_limit();
+                        float current_feedback_buffer = msg->power_heat_data.buffer_energy;
                         power_limit_test = msg->robot_status.chassis_power_limit;
                         if (power_limit_test >= 40 && power_limit_test <= 120)
                         {
@@ -303,7 +306,7 @@ void dji_motor_control()
                             power_limit_out =power_limit_test;
                         }
                         //底盘功率限制单位转换
-                        if (power_all > (power_limit_out * (1+ 10 * msg->power_heat_data.buffer_energy/power_limit_out)) || msg->power_heat_data.buffer_energy<50) {
+                        if (power_all > (power_limit_out + 20 *msg->power_heat_data.buffer_energy/power_limit_out)) {
                             k_zoom = (float)power_limit_out / power_all;
                             for (int j = 0; j < 4; ++j)
                             {

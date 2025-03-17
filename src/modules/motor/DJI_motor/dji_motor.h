@@ -107,4 +107,6 @@ void dji_motor_enable(dji_motor_object_t *motor);
  */
 void dji_motot_rx_callback(rt_device_t dev, uint32_t id, uint8_t *data);
 float decode_6623_aps(float inputs);
+#define BUFFER_RECOVERY_RATE 60.0f                 // 缓冲能量恢复速率（J/s）
+#define BUFFER_SAFE_MARGIN 5.0f                    // 缓冲能量安全余量
 #endif /* _DJI_MOTOR_H */
