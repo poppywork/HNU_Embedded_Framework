@@ -24,6 +24,7 @@ static struct trans_fdb_msg  trans_fdb;
 static publisher_t *pub_gim;
 static subscriber_t *sub_cmd, *sub_trans, *sub_ins;
 
+
 static void gimbal_pub_init(void);
 static void gimbal_sub_init(void);
 static void gimbal_pub_push(void);
@@ -190,10 +191,10 @@ void gimbal_thread_entry(void *argument)
                 gim_motor_ref[PITCH] = gim_cmd.pitch;
                 gim_motor_ref[YAW_DOWN] = gim_cmd.yaw_down;
             /*扫描模式下，像手动模式下一样更新offest角度，这样自瞄发过去的数据才对*/
-                if(trans_fdb.roll == 0)
-                    gim_fdb.yaw_offset_angle = ins_data.yaw;
+            if(trans_fdb.roll == 0)
+                gim_fdb.yaw_offset_angle = ins_data.yaw ;
 
-                // 底盘相对于云台归中值的角度，取负
+            // 底盘相对于云台归中值的角度，取负
                 gim_fdb.yaw_relative_angle = -yaw_down_motor_relive;
                 break;
 
@@ -262,7 +263,10 @@ static void gimbal_motor_init()
     pid_config_t yaw_speed_imu_config = INIT_PID_CONFIG(YAW_KP_V_IMU, YAW_KI_V_IMU, YAW_KD_V_IMU, YAW_INTEGRAL_V_IMU, YAW_MAX_V_IMU,
                                                         (PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement));
     pid_config_t yaw_angle_imu_config = INIT_PID_CONFIG(YAW_KP_A_IMU, YAW_KI_A_IMU, YAW_KD_A_IMU, YAW_INTEGRAL_A_IMU, YAW_MAX_A_IMU,
-                                                        (PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement));
+                                                        (PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement | PID_ChangingIntegrationRate));
+    //角度环加入变速积分
+    yaw_angle_imu_config.CoefA = YAW_CoefA_IMU;
+    yaw_angle_imu_config.CoefB = YAW_CoefB_IMU;
 
     // TODO: 自瞄模式参数待调
     pid_config_t yaw_speed_auto_config = INIT_PID_CONFIG(YAW_KP_V_AUTO, YAW_KI_V_AUTO, YAW_KD_V_AUTO, YAW_INTEGRAL_V_AUTO, YAW_MAX_V_AUTO,
@@ -280,7 +284,10 @@ static void gimbal_motor_init()
     pid_config_t pitch_speed_imu_config = INIT_PID_CONFIG(PITCH_KP_V_IMU, PITCH_KI_V_IMU, PITCH_KD_V_IMU, PITCH_INTEGRAL_V_IMU, PITCH_MAX_V_IMU,
                                                           (PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement));
     pid_config_t pitch_angle_imu_config = INIT_PID_CONFIG(PITCH_KP_A_IMU, PITCH_KI_A_IMU, PITCH_KD_A_IMU, PITCH_INTEGRAL_A_IMU, PITCH_MAX_A_IMU,
-                                                          (PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement));
+                                                          (PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement | PID_ChangingIntegrationRate));
+    //角度环加入变速积分
+    pitch_angle_imu_config.CoefA = PITCH_CoefA_IMU;
+    pitch_angle_imu_config.CoefB = PITCH_CoefB_IMU;
 
     // TODO: 自瞄模式参数待调
     pid_config_t pitch_speed_auto_config = INIT_PID_CONFIG(PITCH_KP_V_AUTO, PITCH_KI_V_AUTO, PITCH_KD_V_AUTO, PITCH_INTEGRAL_V_AUTO, PITCH_MAX_V_AUTO,
@@ -336,8 +343,16 @@ static rt_int16_t motor_control_yaw(dji_motor_measure_t measure){
             get_angle = ins_data.yaw_total_angle - gim_fdb.yaw_offset_angle_total;
             break;
         case GIMBAL_AUTO:
-            pid_speed = gim_controller[YAW].pid_speed_auto;
-            pid_angle = gim_controller[YAW].pid_angle_auto;
+            // if(trans_fdb.roll == 0)
+            // {
+            //     pid_speed = gim_controller[YAW].pid_speed_imu;
+            //     pid_angle = gim_controller[YAW].pid_angle_imu;
+            // }
+            // else
+            // {
+                pid_speed = gim_controller[YAW].pid_speed_auto;
+                pid_angle = gim_controller[YAW].pid_angle_auto;
+            // }
             get_speed = ins_data.gyro[Z];
             get_angle = ins_data.yaw_total_angle - gim_fdb.yaw_offset_angle_total;
             break;
@@ -412,6 +427,7 @@ static rt_int16_t motor_control_pitch(dji_motor_measure_t measure){
         /* 注意负号 */
         pid_out_angle = pid_calculate(pid_angle, get_angle, gim_motor_ref[PITCH]);  // 编码器增长方向与imu相反
         send_data = pid_calculate(pid_speed, get_speed, pid_out_angle);     // 电机转动正方向与imu相反
+        send_data += 6000;
     }
     else /* imu闭环 */
     {
@@ -420,6 +436,7 @@ static rt_int16_t motor_control_pitch(dji_motor_measure_t measure){
         /* 注意负号 */
         pid_out_angle = pid_calculate(pid_angle, get_angle, gim_motor_ref[PITCH]);
         send_data = pid_calculate(pid_speed, get_speed, pid_out_angle);      // 电机转动正方向与imu相反
+        send_data  += 6000;  //注意，实际测得最低点实际电流值，用于补偿重力
     }
 
     return send_data;
