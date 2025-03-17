@@ -33,6 +33,14 @@ static void cmd_pub_push(void);
 static void cmd_sub_init(void);
 static void cmd_sub_pull(void);
 
+/*      枪口热量限制相关        */
+static void barrel_heat_limit();
+#define CONNECTED 0
+#define LOSE 1
+/*调试用：关闭后不进行热量限制*/
+static int debug_barrel_limit_flag = 1;
+static rt_bool_t referee_connect_status;
+
 /*发射停止标志位*/
 static int trigger_flag=0;
 /*堵转电流反转记次*/
@@ -170,7 +178,8 @@ static void cmd_sub_pull(void)
     sub_get_msg(sub_trans,&trans_fdb);
 //    sub_get_msg(sub_referee, &referee_fdb);
     sub_get_msg(sub_ins, &ins_data);
-    sub_referee = get_power_limit();
+    // sub_referee = get_power_limit();
+    referee_fdb = *get_power_limit();
 }
 
 /* ------------------------------ 将遥控器数据转换为控制指令 ----------------------------- */
@@ -499,24 +508,24 @@ static void remote_to_cmd_pc_controler(void)
         shoot_cmd.ctrl_mode=SHOOT_COUNTINUE;
         shoot_cmd.shoot_freq=DBUS_FRICTION_AUTO_SPEED_H;
 
-        if(((int16_t)referee_fdb.robot_status.shooter_barrel_heat_limit-(int16_t)referee_fdb.power_heat_data.shooter_17mm_1_barrel_heat)<=30)
-        {
-            shoot_cmd.shoot_freq=0;
-        }
+        // if(((int16_t)referee_fdb.robot_status.shooter_barrel_heat_limit-(int16_t)referee_fdb.power_heat_data.shooter_17mm_1_barrel_heat)<=30)
+        // {
+        //     shoot_cmd.shoot_freq=0;
+        // }
 
-        if (km.shift_sta==KEY_PRESS_LONG)
-        {
-            shoot_cmd.shoot_freq=DBUS_FRICTION_AUTO_SPEED_H;
-        }
-
-        if(referee_fdb.robot_status.shooter_barrel_heat_limit==0)
-        {
-            shoot_cmd.shoot_freq=DBUS_FRICTION_AUTO_SPEED_L;
-        }
-        else
-        {
-
-        }
+        // if (km.shift_sta==KEY_PRESS_LONG)
+        // {
+        //     shoot_cmd.shoot_freq=DBUS_FRICTION_AUTO_SPEED_H;
+        // }
+        //
+        // if(referee_fdb.robot_status.shooter_barrel_heat_limit==0)
+        // {
+        //     shoot_cmd.shoot_freq=DBUS_FRICTION_AUTO_SPEED_L;
+        // }
+        // else
+        // {
+        //
+        // }
 
     }
     else
@@ -524,6 +533,7 @@ static void remote_to_cmd_pc_controler(void)
         shoot_cmd.ctrl_mode=SHOOT_COUNTINUE;
         shoot_cmd.shoot_freq=0;
     }
+    barrel_heat_limit();
     /*-------------------------------------------------------------堵弹反转检测------------------------------------------------------------*/
     if (shoot_fdb.trigger_motor_current>=9500||reverse_cnt!=0)
     {
@@ -770,3 +780,39 @@ static void remote_to_cmd_sbus(void)
     }*/
 }
 #endif
+/*
+ * 采用热量缓冲那就不需要判断shoot_bullet_freq
+ * 只需要对热量差值做一个映射就可以了
+ */
+static void barrel_heat_limit()
+{
+    static int delta_heat;
+    static int last_id;
+    static int now_id;
+    now_id = referee_fdb.robot_status.robot_id;
+    if(now_id == 0 && last_id != 0) {
+        referee_connect_status = LOSE;//如果原来不是0而现在是0，那么裁判系统断连了
+    }
+
+    if(referee_connect_status == CONNECTED && debug_barrel_limit_flag == 1
+                                        &&shoot_cmd.ctrl_mode==SHOOT_COUNTINUE
+                                        && shoot_cmd.shoot_freq !=0//需要进行限制
+    ){
+        delta_heat = referee_fdb.robot_status.shooter_barrel_heat_limit -
+                        referee_fdb.power_heat_data.shooter_17mm_1_barrel_heat;
+        /*老烧因为拨弹速度过高，用10限制不住，40几乎刚好,如果还偶尔会超那么可以再往上提高一点*/
+        if(delta_heat< 100 && delta_heat >= 40)
+            shoot_cmd.shoot_freq = delta_heat / 100.0f  * DBUS_FRICTION_AUTO_SPEED_H;
+        else if(delta_heat <40) {
+            shoot_cmd.shoot_freq = 0;
+        }
+
+    }else if(referee_connect_status == LOSE){
+        shoot_cmd.shoot_freq = DBUS_FRICTION_AUTO_SPEED_L;
+    }
+    if(now_id != 0) {
+        last_id = now_id;
+        referee_connect_status = CONNECTED;
+    }
+
+}
