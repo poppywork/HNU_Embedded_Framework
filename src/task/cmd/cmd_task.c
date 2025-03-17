@@ -33,6 +33,13 @@ static void cmd_pub_push(void);
 static void cmd_sub_init(void);
 static void cmd_sub_pull(void);
 
+/*      枪口热量限制相关        */
+static void barrel_heat_limit();
+#define CONNECTED 0
+#define LOSE 1
+/*调试用：关闭后不进行热量限制*/
+static int debug_barrel_limit_flag = 1 ;
+static rt_bool_t referee_connect_status;
 /*发射停止标志位*/
 static int trigger_flag=0;
 /*自瞄鼠标累计操作值*/
@@ -165,7 +172,8 @@ static void cmd_sub_pull(void)
     sub_get_msg(sub_shoot, &shoot_fdb);
     sub_get_msg(sub_trans,&trans_fdb);
     sub_get_msg(sub_ins, &ins_data);
-    sub_get_msg(sub_referee, &referee_fdb);
+    // sub_get_msg(sub_referee, &referee_fdb);
+    referee_fdb = *get_power_limit();
 }
 
 /* ------------------------------ 将遥控器数据转换为控制指令 ----------------------------- */
@@ -569,31 +577,37 @@ static void remote_to_cmd_pc_DT7(void)
             break;
 
         case SHOOT_COUNTINUE:
+
             if(
                 (
-                ((rc_now->mouse.l==1||rc_now->wheel>=200)  && trans_fdb.roll==1 && gim_cmd.ctrl_mode == GIMBAL_AUTO)
+                ((rc_now->mouse.l==1||rc_now->wheel>=200)
+                    // && trans_fdb.roll==1
+                    && gim_cmd.ctrl_mode == GIMBAL_AUTO)
                 ||((rc_now->mouse.l==1||rc_now->wheel>=200)&&gim_cmd.ctrl_mode == GIMBAL_GYRO)
                )
                &&shoot_cmd.friction_status==1
-            &&(referee_fdb.power_heat_data.shooter_17mm_1_barrel_heat < (referee_fdb.robot_status.shooter_barrel_heat_limit-10) || referee_fdb.robot_status.robot_id == 0)
+            // &&(referee_fdb.power_heat_data.shooter_17mm_1_barrel_heat < (referee_fdb.robot_status.shooter_barrel_heat_limit-10) || referee_fdb.robot_status.robot_id == 0)
             //在未连接裁判系统时机器人ID为0，此时忽略裁判系统枪口热量进行开火，但未验证在链接裁判系统后没有连接到服务器时ID是否也为0以及链接裁判系统的其他情况，从而导致在未经允许的情况下解除保险开火
             )
             {
+                // barrel_heat_limit();//只对countinue模式做出限制
+
                 shoot_cmd.shoot_freq= DBUS_FRICTION_AUTO_SPEED_H;
                 /*!扳机连发功率限制如果未挂载功率限制，发射频率置为一个合适速度*/
-                if(((int16_t)referee_fdb.robot_status.shooter_barrel_heat_limit-(int16_t)referee_fdb.power_heat_data.shooter_17mm_1_barrel_heat)<=30)
-                {
-                    shoot_cmd.shoot_freq=0;
-                }
-                if(referee_fdb.robot_status.shooter_barrel_heat_limit==0)
-                {
-                    shoot_cmd.shoot_freq= DBUS_FRICTION_AUTO_SPEED_L;
-                }
+                // if(((int16_t)referee_fdb.robot_status.shooter_barrel_heat_limit-(int16_t)referee_fdb.power_heat_data.shooter_17mm_1_barrel_heat)<=30)
+                // {
+                //     shoot_cmd.shoot_freq=0;
+                // }
+                // if(referee_fdb.robot_status.shooter_barrel_heat_limit==0)
+                // {
+                //     shoot_cmd.shoot_freq= DBUS_FRICTION_AUTO_SPEED_L;
+                // }
             }
             else
             {
                 shoot_cmd.shoot_freq=0;
             }
+        barrel_heat_limit();
             break;
 
     }
@@ -642,3 +656,35 @@ static void remote_to_cmd_pc_DT7(void)
 
 }
 #endif
+/*
+ * 采用热量缓冲那就不需要判断shoot_bullet_freq
+ * 只需要对热量差值做一个映射就可以了
+ */
+static void barrel_heat_limit()
+{
+    static int delta_heat;
+    static int last_id;
+    static int now_id;
+    now_id = referee_fdb.robot_status.robot_id;
+    if(now_id == 0 && last_id != 0) {
+        referee_connect_status = LOSE;//如果原来不是0而现在是0，那么裁判系统断连了
+    }
+
+    if(referee_connect_status == CONNECTED && debug_barrel_limit_flag == 1 && shoot_cmd.shoot_freq !=0) {//需要进行限制
+        delta_heat = referee_fdb.robot_status.shooter_barrel_heat_limit -
+                        referee_fdb.power_heat_data.shooter_17mm_1_barrel_heat;
+        if(delta_heat< 100 && delta_heat >= 10)
+            shoot_cmd.shoot_freq = (delta_heat)/ 100.0f  * DBUS_FRICTION_AUTO_SPEED_H;
+        else if(delta_heat <10) {
+            shoot_cmd.shoot_freq = 0;
+        }
+
+    }else if(referee_connect_status == LOSE)  {
+        shoot_cmd.shoot_freq = DBUS_FRICTION_AUTO_SPEED_L;
+    }
+    if(now_id != 0) {
+        last_id = now_id;
+        referee_connect_status = CONNECTED;
+    }
+
+}
