@@ -105,7 +105,7 @@ void PC_Handle_kb(void)
     else
     {
         km.move_mode = NORMAL_MODE;
-        km.max_spd = 3000;
+        km.max_spd = 4500;
     }
 
     //add ramp
@@ -117,6 +117,7 @@ void PC_Handle_kb(void)
     {
         km.vy =(float)km.vy* ( 1 - km_vy_ramp->calc(km_vy_ramp));
     }
+
 
     if (rc_dbus_obj[0].kb.bit.A)
         km.vx -= (float)delta_spd;
