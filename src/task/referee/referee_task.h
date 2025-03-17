@@ -42,7 +42,7 @@ void Referee_Data_Solve(uint8_t* referee_data_frame);
 void referee_UI_task_init(void);
 void referee_control_task(void);
 void Referee_Data_Solve(uint8_t* frame);
-
+struct referee_msg *get_power_limit(void);
 /* -------------------------------- 线程间通讯话题相关 ------------------------------- */
 static struct gimbal_cmd_msg gim_cmd;
 static struct ins_msg ins_data;
