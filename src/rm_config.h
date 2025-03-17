@@ -134,7 +134,7 @@
 #define SIDEWAYS_ANGLE   36
 #define CENTER_ECD_YAW   3818         //云台yaw轴编码器归中值(侧身)
 #else
-#define CENTER_ECD_YAW   2419         //云台yaw轴编码器归中值
+#define CENTER_ECD_YAW   2069         //云台yaw轴编码器归中值
 #define SIDEWAYS_ANGLE   0
 #endif
 
@@ -148,28 +148,28 @@
 /* 云台控制周期 (ms) */
 #define GIMBAL_PERIOD 1
 /* 云台回中初始化时间 (ms) */
-#define BACK_CENTER_TIME 500
+#define BACK_CENTER_TIME 100
 
 /* -------------------------------- 云台电机PID参数 ------------------------------- */
 /* 云台yaw轴电机PID参数 */
 /* imu速度环 */
-#define YAW_KP_V_IMU             10000
+#define YAW_KP_V_IMU             12000
 #define YAW_KI_V_IMU             200
-#define YAW_KD_V_IMU             0.01f
-#define YAW_INTEGRAL_V_IMU       1000
+#define YAW_KD_V_IMU             0.005f
+#define YAW_INTEGRAL_V_IMU       200
 #define YAW_MAX_V_IMU            25000
 /* imu角度环 */
 
 #define YAW_KP_A_IMU             0.15f   //降低响应速度减小超调以提升稳定性
 #define YAW_KI_A_IMU             0.005f
-#define YAW_KD_A_IMU             0.015f
-#define YAW_INTEGRAL_A_IMU       0.5f
+#define YAW_KD_A_IMU             0.005f
+#define YAW_INTEGRAL_A_IMU       0.2f
 #define YAW_MAX_A_IMU            5
 /* auto速度环 */
-#define YAW_KP_V_AUTO            10000
+#define YAW_KP_V_AUTO            12000
 #define YAW_KI_V_AUTO            200
-#define YAW_KD_V_AUTO            0.01f
-#define YAW_INTEGRAL_V_AUTO      1000
+#define YAW_KD_V_AUTO            0.005f
+#define YAW_INTEGRAL_V_AUTO      200
 #define YAW_MAX_V_AUTO           25000
 /* auto角度环 */
 #define YAW_KP_A_AUTO            0.15f
@@ -182,7 +182,7 @@
 /* imu速度环 */
 #define PITCH_KP_V_IMU           3000
 #define PITCH_KI_V_IMU           100
-#define PITCH_KD_V_IMU           1
+#define PITCH_KD_V_IMU           0.1
 #define PITCH_INTEGRAL_V_IMU     1000
 #define PITCH_MAX_V_IMU          16384
 
@@ -220,26 +220,26 @@
 // TODO: 速度期望应改为变量应对速度切换。初次参数调整已完成
 /* 右摩擦轮M3508电机PID参数 */
 /* 速度环 */
-#define RIGHT_KP_V             25
-#define RIGHT_KI_V             0.1
+#define RIGHT_KP_V             18
+#define RIGHT_KI_V             0.0f
 #define RIGHT_KD_V             0.001f
-#define RIGHT_INTEGRAL_V       500
+#define RIGHT_INTEGRAL_V       0
 #define RIGHT_MAX_V            16384
 
 /* 左摩擦轮M3508电机PID参数 */
 /* 速度环 */
-#define LEFT_KP_V           25
-#define LEFT_KI_V           0.1
+#define LEFT_KP_V           18
+#define LEFT_KI_V           0.0f
 #define LEFT_KD_V           0.001f
-#define LEFT_INTEGRAL_V     500
+#define LEFT_INTEGRAL_V     0
 #define LEFT_MAX_V          16384
 
 /* 中摩擦轮M3508电机PID参数 */
 /* 速度环 */
-#define MIDDLE_KP_V           25
-#define MIDDLE_KI_V           0.1
+#define MIDDLE_KP_V           18
+#define MIDDLE_KI_V           0.0f
 #define MIDDLE_KD_V           0.001f
-#define MIDDLE_INTEGRAL_V     500
+#define MIDDLE_INTEGRAL_V     0
 #define MIDDLE_MAX_V          16384
 
 
