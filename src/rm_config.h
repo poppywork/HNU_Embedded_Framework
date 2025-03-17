@@ -90,8 +90,8 @@
 
 /******** 底盘最大速度设置 *******/
 /* 底盘移动最大速度，单位是毫米每秒 */
-#define MAX_CHASSIS_VX_SPEED 5000
-#define MAX_CHASSIS_VY_SPEED 5000
+#define MAX_CHASSIS_VX_SPEED 8000
+#define MAX_CHASSIS_VY_SPEED 8000
 /* 高速档位（mm/s） */
 #define MAX_CHASSIS_VX_SPEED_HIGH 11000
 #define MAX_CHASSIS_VY_SPEED_HIGH 11000
@@ -109,7 +109,7 @@
 
 /******** DBUS底盘小陀螺相关设置 *******/
 /*旋转速度*/
-#define ROTATE_RATIO 2.6
+#define ROTATE_RATIO 5
 
 /* --------------------------------- 底盘PID参数 -------------------------------- */
 /* 电机速度环 */
