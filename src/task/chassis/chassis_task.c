@@ -32,6 +32,7 @@ static void chassis_sub_pull(void);
 static pid_obj_t *follow_pid; // 用于底盘跟随云台计算vw
 static pid_config_t chassis_follow_config = INIT_PID_CONFIG(CHASSIS_KP_V_FOLLOW, CHASSIS_KI_V_FOLLOW, CHASSIS_KD_V_FOLLOW, CHASSIS_INTEGRAL_V_FOLLOW, CHASSIS_MAX_V_FOLLOW,
                                                             (PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement));
+static float chassis_flitter_vw;
 static struct chassis_controller_t
 {
     pid_obj_t *speed_pid;
@@ -102,6 +103,13 @@ void chassis_thread_entry(void *argument)
                 }
                 break;
             case CHASSIS_FOLLOW_GIMBAL:
+                if(chassis_cmd.vw < 2 && chassis_cmd.vw > 0)
+                    chassis_flitter_vw = chassis_cmd.vw*chassis_cmd.vw/2.0f;
+                else if(chassis_cmd.vw > -2 && chassis_cmd.vw < 0)
+                    chassis_flitter_vw = -chassis_cmd.vw*chassis_cmd.vw/2.0f;
+                else
+                 chassis_flitter_vw = chassis_cmd.vw*chassis_cmd.vw;
+
                 chassis_cmd.vw = pid_calculate(follow_pid, chassis_cmd.offset_angle, 0);
                 /* 底盘运动学解算 */
                 absolute_cal(&chassis_cmd, chassis_cmd.offset_angle);
@@ -337,9 +345,12 @@ motor_config_t chassis_motor_config[4] =
  */
 static void chassis_motor_init()
 {
+
     pid_config_t chassis_speed_config = INIT_PID_CONFIG(CHASSIS_KP_V_MOTOR, CHASSIS_KI_V_MOTOR, CHASSIS_KD_V_MOTOR, CHASSIS_INTEGRAL_V_MOTOR, CHASSIS_MAX_V_MOTOR,
                                                         (PID_Trapezoid_Intergral | PID_Integral_Limit | PID_Derivative_On_Measurement));
-
+    //底盘电机速度环变速积分
+    chassis_speed_config.CoefB = CHASSIS_CofeB;
+    chassis_speed_config.CoefA = CHASSIS_CofeA;
     for (uint8_t i = 0; i < 4; i++)
     {
         chassis_controller[i].speed_pid = pid_register(&chassis_speed_config);
