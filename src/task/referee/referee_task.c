@@ -501,3 +501,7 @@ void Referee_Data_Solve(uint8_t* frame)
             break;
     }
 }
+struct referee_msg *get_power_limit()
+{
+    return &referee_data; // 返回结构体指针
+}

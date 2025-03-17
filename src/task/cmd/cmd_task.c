@@ -27,6 +27,9 @@ static struct ins_msg ins_data;
 static struct referee_msg referee_fdb;
 
 
+struct referee_msg *msg_cmd;
+
+
 static rc_dbus_obj_t *rc_now, *rc_last;
 
 static void cmd_pub_init(void);
@@ -81,6 +84,7 @@ static float cmd_dt;
 void cmd_thread_entry(void *argument)
 {
     static float cmd_start;
+    msg_cmd = get_power_limit();
 
     cmd_pub_init();
     cmd_sub_init();
@@ -521,15 +525,19 @@ static void remote_to_cmd_pc_DT7(void)
     }
     if (chassis_cmd.ctrl_mode==CHASSIS_SPIN)
     {
-        chassis_cmd.vw=1.2;//4.5+2*referee_fdb.robot_status.chassis_power_limit/60;/*!小陀螺转速，随着功率限制提升加快转速*/
-        if(chassis_fdb.vw_ch < 1.15) //当小陀螺被堵住时，自动退出小陀螺模式
+        chassis_cmd.vw=3 * msg_cmd->robot_status.chassis_power_limit/55;/*!小陀螺转速，随着功率限制提升加快转速*/
+        if(chassis_fdb.vw_ch < chassis_cmd.vw*0.85f) //当小陀螺被堵住时，自动退出小陀螺模式
         {
             spin_cnt++;
-            if(spin_cnt>3000)
+            if(spin_cnt>2000)
             {
                 chassis_cmd.ctrl_mode = CHASSIS_FOLLOW_GIMBAL;
                 spin_cnt=0;
             }
+        }
+        else
+        {
+            spin_cnt =0;
         }
 
     }
@@ -638,7 +646,7 @@ static void remote_to_cmd_pc_DT7(void)
     if (shoot_fdb.trigger_motor_current>=16300)/*M3508电机的堵转电流是2500*/
     {
         reverse_cnt++;
-        if (reverse_cnt<650)
+        if (reverse_cnt<300)
             reverse_cnt++;
         else
         {

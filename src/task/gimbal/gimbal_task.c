@@ -103,7 +103,7 @@ void gimbal_thread_entry(void *argument)
         /* 更新该线程所有的订阅者 */
         gimbal_sub_pull();
 
-        // 云台本身相对于归中值的角度，加负号
+        // 云台本身相对于归中值的角度，取负
         yaw_motor_relive = -(rt_int16_t)get_relative_pos(gim_motor[YAW]->measure.ecd, CENTER_ECD_YAW) / 22.75f;
         // pitch_motor_relive = -(rt_int16_t )get_relative_pos(gim_motor[PITCH]->measure.ecd, CENTER_ECD_PITCH) / 22.75f;
         pitch_motor_relive = ins_data.pitch;   //pitch轴改用丝杆结构，直接使用ins_data.pitch作为相对角度值
@@ -303,7 +303,7 @@ static rt_int16_t motor_control_yaw(dji_motor_measure_t measure){
         pid_speed = gim_controller[YAW].pid_speed_imu;
         pid_angle = gim_controller[YAW].pid_angle_imu;
         get_speed = ins_data.gyro[Z];
-        get_angle = yaw_motor_relive;
+        get_angle = -yaw_motor_relive;
         break;
     case GIMBAL_GYRO:
         pid_speed = gim_controller[YAW].pid_speed_imu;
@@ -346,23 +346,13 @@ static rt_int16_t motor_control_yaw(dji_motor_measure_t measure){
     {
         /* 注意负号 */
         pid_angle->ITerm =0;
+        pid_angle->Iout =0;
         pid_speed->ITerm =0;
-        if(pid_angle->Pout > 3)
-        {
-            pid_angle->Pout = 3;;
-        }
+        pid_speed->Iout =0;
         pid_out_angle = pid_calculate(pid_angle, get_angle, gim_motor_ref[YAW]);  // 编码器增长方向与imu相反
-        if(pid_out_angle > 1)
-        {
-            pid_out_angle =1;
-        }
-        else if(pid_out_angle < -1)
-        {
-            pid_out_angle = -1;
-        }
-        send_data = -pid_calculate(pid_speed, get_speed, pid_out_angle);     // 电机转动正方向与imu相反
+        send_data = pid_calculate(pid_speed, get_speed, pid_out_angle);     // 电机转动正方向与imu相反
     }
-    else if(gim_cmd.ctrl_mode != GIMBAL_RELAX) /* imu闭环 */
+    else if(gim_cmd.ctrl_mode != GIMBAL_RELAX && gim_cmd.ctrl_mode != GIMBAL_INIT) /* imu闭环 */
     {
         /* 注意负号 */
         pid_out_angle = pid_calculate(pid_angle, get_angle, gim_motor_ref[YAW]);

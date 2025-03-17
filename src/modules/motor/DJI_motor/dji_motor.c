@@ -10,22 +10,21 @@
 #define DBG_TAG   "dji.motor"
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
-float power__all=0;
-int power_limit =0;
-int powerlimit = 60;
 #define DJI_MOTOR_CNT 14             // 默认波特率下，实测挂载电机极限数量
 /* 滤波系数设置为1的时候即关闭滤波 */
 #define SPEED_SMOOTH_COEF 0.85f      // 最好大于0.85
 #define CURRENT_SMOOTH_COEF 0.9f     // 必须大于0.9
 #define ECD_ANGLE_COEF_DJI 0.043945f // (360/8192),将编码器值转化为角度制
-#define  constant 4//2650
-#define k_rpm 1.453e-07//0.001651
-#define k_current 1.23e-07//0.000000001721
-#define k_Torque 1.997e-06f
+#define constant 1.02f
+#define k_rpm 1.453e-07f
+#define k_current 1.23e-07f
+#define k_Torque 1.9968899e-06f
+float power__all=0;
+uint16_t power_limit_out = 60;
+uint16_t power_limit_test = 0;
 static uint8_t idx = 0; // register idx,是该文件的全局电机索引,在注册时使用
 /* DJI电机的实例,此处仅保存指针,内存的分配将通过电机实例初始化时通过malloc()进行 */
 static dji_motor_object_t *dji_motor_obj[DJI_MOTOR_CNT] = {NULL};
- static struct referee_msg referee_fdb;
 static rt_device_t chassis_can, gimbal_can;
 
 // TODO: 0x2ff容易发送失败
@@ -254,36 +253,36 @@ void dji_motor_control()
      }
 #endif
 #ifdef BSP_USING_POWER_LIMIT
-         dji_motor_object_t *motor;
-         dji_motor_measure_t measure;
-         uint8_t group, num; // 电机组号和组内编号
-         int16_t set = 0; // 电机控制器计算得到的输出值
-         uint8_t size = 0;
-         int16_t set1[4],rpm[4];
-         float power[4]={0},k_zoom = 0,power_all = 0;
-         uint8_t group1[4]={0},num1[4]={0};
-          // 遍历所有电机实例,运行控制算法并填入报文
-     for (size_t i = 0; i < idx; ++i)
-         {
-         motor = dji_motor_obj[i];
-         measure = motor->measure;
-         //当电机为底盘电机，即挂载在can1总线且为3508电机，使用底盘功率限制，其余正常填入报文
-             if ((motor->motor_type==M3508)&&(motor->can_dev== chassis_can))
-             {
+    dji_motor_object_t *motor;
+    dji_motor_measure_t measure;
+    uint8_t group, num; // 电机组号和组内编号
+    int16_t set = 0; // 电机控制器计算得到的输出值
+    uint8_t size = 0;
+    int16_t set1[4],rpm[4];
+    float power[4]={0},k_zoom = 0,power_all = 0;
+    uint8_t group1[4]={0},num1[4]={0};
+    // 遍历所有电机实例,运行控制算法并填入报文
+    for (size_t i = 0; i < idx; ++i)
+    {
+        motor = dji_motor_obj[i];
+        measure = motor->measure;
+        //当电机为底盘电机，即挂载在can1总线且为3508电机，使用底盘功率限制，其余正常填入报文
+        if ((motor->motor_type==M3508)&&(motor->can_dev == chassis_can))
+        {
             switch (motor->rx_id) {
                 case 0x201:
-                    {
+                {
                     set1[0] = motor->control(measure);
                     rpm[0] = measure.speed_rpm;
                     group1[0] = motor->send_group;
                     num1[0] = motor->message_num;
                     power[0] = k_rpm * motor->measure.speed_rpm * motor->measure.speed_rpm +
-                            k_current * set1[0] * set1[0] +
-                            motor->measure.speed_rpm * set1[0] * k_Torque + constant;
+                               k_current * set1[0] * set1[0] +
+                               motor->measure.speed_rpm * set1[0] * k_Torque + constant;
                     break;
-                    }
+                }
                 case 0x202:
-                    {
+                {
                     set1[1] = motor->control(measure);;
                     rpm[1] = measure.speed_rpm;
                     group1[1] = motor->send_group;
@@ -292,9 +291,9 @@ void dji_motor_control()
                                k_current * set1[1] * set1[1] +
                                motor->measure.speed_rpm * set1[1] * k_Torque + constant;
                     break;
-                    }
+                }
                 case 0x203:
-                    {
+                {
                     set1[2] = motor->control(measure);;
                     rpm[2] = measure.speed_rpm;
                     group1[2] = motor->send_group;
@@ -303,7 +302,7 @@ void dji_motor_control()
                                k_current * set1[2] * set1[2] +
                                motor->measure.speed_rpm * set1[2] * k_Torque + constant;
                     break;
-                    }
+                }
                 case 0x204:
                 {
                     rpm[3] = measure.speed_rpm;
@@ -316,22 +315,25 @@ void dji_motor_control()
                     // 计算全局功率限制系数
                     for (int j = 0; j < 4; ++j)
                     {
-
                         if(power[j]>0) {
                             power_all += power[j];
                         }
                     }
                     power__all=power_all; //用于观察与裁判系统读取功率的拟合效果
-
-                     power_limit = referee_fdb.robot_status.chassis_power_limit;
-                    if (power_limit >=50 && power_limit <=120){
-                        powerlimit =power_limit;
+                    struct referee_msg *msg = get_power_limit();
+                    power_limit_test = msg->robot_status.chassis_power_limit;
+                    if (power_limit_test >= 40 && power_limit_test <= 120)
+                    {
+                        power_limit_out = power_limit_test;
+                    }else
+                    {
+                        power_limit_out =power_limit_test;
                     }
                     //底盘功率限制单位转换
-                    if (power_all>powerlimit) {
-                        k_zoom = 120 / power_all;
-
-                        for (int j = 0; j < 4; ++j){
+                    if (power_all>power_limit_out && msg->power_heat_data.buffer_energy<90) {
+                        k_zoom = (float)power_limit_out / power_all;
+                        for (int j = 0; j < 4; ++j)
+                        {
                             if (power[j]<0)
                             {
                                 continue;
@@ -341,6 +343,8 @@ void dji_motor_control()
                             if (set1[j] >= 0) {
                                 set1[j] = (-k_Torque * rpm[j] +sqrt(k_Torque * rpm[j] * k_Torque * rpm[j] + 4 * power[j] * k_current)) /(2 * k_current);
 
+
+
                                 if (set1[j]>16000){
                                     set1[j]=16000;
                                 }
@@ -348,6 +352,8 @@ void dji_motor_control()
                                 set1[j] = (-k_Torque * rpm[j] -sqrt(k_Torque * rpm[j] * k_Torque * rpm[j] + 4 * power[j] * k_current)) /(2 * k_current);
                                 if (set1[j]<-16000){
                                     set1[j]=-16000;
+
+
 
                                 }
                             }
@@ -429,9 +435,9 @@ dji_motor_object_t *dji_motor_register(motor_config_t *config, void *control)
 
     // 电机离线检测定时器相关
     object->timer = rt_timer_create("dji_motor",
-                             motor_lost_callback,
-                             object, 20,
-                             RT_TIMER_FLAG_PERIODIC);
+                                    motor_lost_callback,
+                                    object, 20,
+                                    RT_TIMER_FLAG_PERIODIC);
     rt_timer_start(object->timer);
 
     dji_motor_enable(object);

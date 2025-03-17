@@ -9,6 +9,7 @@
 #include "rm_algorithm.h"
 #include "rm_module.h"
 #include "rm_task.h"
+#include "referee_task.h"
 
 #define DBG_TAG   "rm.task"
 #define DBG_LVL DBG_INFO
@@ -86,6 +87,7 @@ motor_config_t shoot_motor_config[SHT_MOTOR_NUM] ={
 
 static dji_motor_object_t *sht_motor[SHT_MOTOR_NUM];  // 发射器电机实例
 static float shoot_motor_ref[SHT_MOTOR_NUM]; // 电机控制期望值
+static float shoot_motor_oneref;
 
 /*函数声明*/
 static void shoot_motor_init();
@@ -114,7 +116,11 @@ typedef struct {
 static self_shoot_info_e self_shoot_info;
 /* --------------------------------- 射击线程入口 --------------------------------- */
 static float sht_dt;
-static int shoot_cnt;
+static int reverse_ref;
+static uint16_t shooter_barrel_heat_remain;
+static int flag;
+struct referee_msg *msg;
+
 /**
  * @brief shoot线程入口函数
  */
@@ -122,9 +128,9 @@ void shoot_task_entry(void* argument)
 {
     static float sht_start;
     static int servo_cvt_num;
-    static int reverse_cnt;
     static float sht_gap_time;
     static float sht_gap_start_time;
+    msg = get_power_limit();
 
     shoot_motor_init();
     shoot_pub_init();
@@ -157,6 +163,8 @@ void shoot_task_entry(void* argument)
         {
             dji_motor_enable(sht_motor[i]);
         }
+        //枪口热量更新
+        shooter_barrel_heat_remain = msg->robot_status.shooter_barrel_heat_limit - msg->power_heat_data.shooter_42mm_barrel_heat;
 
         //检测是否堵弹，堵弹反转一次
        /* if (sht_motor[TRIGGER_MOTOR]->measure.real_current>=8000||reverse_cnt!=0)
@@ -304,15 +312,44 @@ void shoot_task_entry(void* argument)
                     shoot_motor_ref[TRIGGER_MOTOR]= sht_motor[TRIGGER_MOTOR]->measure.total_angle;
                     total_angle_flag=SHOOT_ANGLE_SINGLE;
                 }
+
                 if (shoot_cmd.trigger_status == TRIGGER_ON)
                 {
                     sht_gap_time = dwt_get_time_ms() - sht_gap_start_time;
                     sht_gap_start_time = dwt_get_time_ms();
-                    if(sht_gap_time>=200)
+                    flag = 1;
+                    if(sht_gap_time>=300)
                     {
-                        shoot_fdb.shoot_cnt++;
+                        flag = 2;
                         //M3508的减速比为 19:1，因此转轴旋转51.43度，要在转子的基础上乘19倍
-                        shoot_motor_ref[TRIGGER_MOTOR]= shoot_motor_ref[TRIGGER_MOTOR] + TRIGGER_MOTOR_51_TO_ANGLE * 19;
+                        if(shoot_motor_ref[TRIGGER_MOTOR] - sht_controller[TRIGGER_MOTOR].pid_angle->Measure > TRIGGER_MOTOR_51_TO_ANGLE * 19 * 0.3)
+                        {
+                            flag = 3;
+                            shoot_motor_ref[TRIGGER_MOTOR]= shoot_motor_ref[TRIGGER_MOTOR]; //此时堵转了
+                        }
+                        else if(reverse_ref !=0 && shoot_cmd.last_mode == SHOOT_REVERSE)
+                        {
+                            flag = 4;
+                            if(sht_controller[TRIGGER_MOTOR].pid_angle->Measure - reverse_ref > TRIGGER_MOTOR_51_TO_ANGLE * 19 * 0.4)
+                            {
+                                flag = 5;
+                                shoot_motor_ref[TRIGGER_MOTOR]= shoot_motor_ref[TRIGGER_MOTOR]; //此时反转尚未完成
+                            }
+                        }
+                        else
+                        {
+                            flag = 6;
+                            shooter_barrel_heat_remain = msg->robot_status.shooter_barrel_heat_limit - msg->power_heat_data.shooter_42mm_barrel_heat;
+                            if(shooter_barrel_heat_remain >= 110
+                                || (shooter_barrel_heat_remain >= 100 && referee_data.robot_status.robot_level == 1))
+                            {
+                                flag = 7;
+                                shoot_fdb.shoot_cnt++;
+                                shoot_motor_ref[TRIGGER_MOTOR]= shoot_motor_ref[TRIGGER_MOTOR] + TRIGGER_MOTOR_51_TO_ANGLE * 19;
+                            }
+
+                        }
+
                     }
                     shoot_cmd.trigger_status=TRIGGER_OFF;//扳机归零
                     shoot_fdb.trigger_status=SHOOT_OK;
@@ -344,7 +381,16 @@ void shoot_task_entry(void* argument)
                 break;
 
             case SHOOT_REVERSE:
-                shoot_motor_ref[TRIGGER_MOTOR]= shoot_motor_ref[TRIGGER_MOTOR] - TRIGGER_MOTOR_51_TO_ANGLE * 19;
+                if(shoot_motor_ref[TRIGGER_MOTOR] - reverse_ref < TRIGGER_MOTOR_51_TO_ANGLE * 19 * 1.8)
+                {
+                    shoot_motor_ref[TRIGGER_MOTOR]= shoot_motor_ref[TRIGGER_MOTOR]; //没有余量进行反转
+                }
+                else
+                {
+                    shoot_motor_ref[TRIGGER_MOTOR]= shoot_motor_ref[TRIGGER_MOTOR] - TRIGGER_MOTOR_51_TO_ANGLE * 19 * 2;
+                    reverse_ref = shoot_motor_ref[TRIGGER_MOTOR];
+                }
+
                 total_angle_flag = SHOOT_ANGLE_SINGLE;
 
                 break;
