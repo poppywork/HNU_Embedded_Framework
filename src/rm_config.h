@@ -138,7 +138,7 @@
 
 #define CENTER_ECD_YAW   6128         //云台yaw轴编码器归中值
 #define CENTER_ECD_PITCH 4142         //云台pitch轴编码器归中值
-#define CENTER_ECD_YAW_DOWN   7498     //云台yaw_down轴编码器归中值
+#define CENTER_ECD_YAW_DOWN   2408     //云台yaw_down轴编码器归中值
 
 /* pitch轴最大仰角 */
 #define PIT_ANGLE_MAX        14.0f
