@@ -197,7 +197,7 @@ typedef struct
 
 /********************其他end********************/
 
-void  client_info_update(struct referee_msg referee);
+void  client_info_update(struct referee_msg referee_data);
 
 //画直线
 graphic_data_struct_t draw_line(char *name,  //图形名

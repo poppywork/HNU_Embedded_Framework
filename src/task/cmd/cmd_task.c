@@ -15,7 +15,7 @@
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
 
-static publisher_t *pub_gim, *pub_chassis, *pub_shoot;
+static publisher_t *pub_gim, *pub_chassis, *pub_shoot,*pub_ui;
 static subscriber_t *sub_gim, *sub_shoot,*sub_trans,*sub_ins,*sub_referee;
 static struct gimbal_cmd_msg gim_cmd;
 static struct gimbal_fdb_msg gim_fdb;
@@ -24,6 +24,7 @@ static struct shoot_fdb_msg  shoot_fdb;
 static struct chassis_cmd_msg chassis_cmd;
 static struct trans_fdb_msg  trans_fdb;
 static struct referee_msg referee_fdb;
+static struct ui_cmd_msg ui_cmd;
 static struct ins_msg ins_data;
 
 static rc_dbus_obj_t *rc_now, *rc_last;
@@ -143,6 +144,7 @@ static void cmd_pub_init(void)
     pub_gim = pub_register("gim_cmd", sizeof(struct gimbal_cmd_msg));
     pub_chassis = pub_register("chassis_cmd", sizeof(struct chassis_cmd_msg));
     pub_shoot= pub_register("shoot_cmd", sizeof(struct shoot_cmd_msg));
+    pub_ui= pub_register("ui_cmd", sizeof(struct ui_cmd_msg));
 }
 
 /**
@@ -153,6 +155,7 @@ static void cmd_pub_push(void)
     pub_push_msg(pub_gim, &gim_cmd);
     pub_push_msg(pub_chassis, &chassis_cmd);
     pub_push_msg(pub_shoot, &shoot_cmd);
+    pub_push_msg(pub_ui, &ui_cmd);
 }
 
 /**
@@ -163,7 +166,7 @@ static void cmd_sub_init(void)
     sub_gim = sub_register("gim_fdb", sizeof(struct gimbal_fdb_msg));
     sub_shoot= sub_register("shoot_fdb", sizeof(struct shoot_fdb_msg));
     sub_trans= sub_register("trans_fdb", sizeof(struct trans_fdb_msg));
-    sub_referee= sub_register("referee_fdb",sizeof(struct referee_msg));
+    sub_referee= sub_register("refree_fdb",sizeof(struct referee_msg));
     sub_ins = sub_register("ins_msg", sizeof(struct ins_msg));
 }
 
@@ -456,6 +459,18 @@ static void remote_to_cmd_pc_controler(void)
             }
         }
     }
+
+    /* -------------初始化ui按键B-----------------*/
+    if(km.b_sta == KEY_PRESS_DOWN){
+
+        ui_cmd.ui_init = 1;//B键被按下满足ui初始化条件
+
+    }else{
+
+        ui_cmd.ui_init = 0;
+
+    }
+
 
     /*TODO:小陀螺*/
     if(km.e_sta==KEY_PRESS_ONCE)

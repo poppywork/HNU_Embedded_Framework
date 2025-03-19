@@ -3,88 +3,87 @@
   * @file           : my_judge.c\h
 	* @author         : czf
 	* @date           : 
-  * @brief          : ¸ù¾İ¡¶RoboMaster_²ÃÅĞÏµÍ³´®¿ÚĞ­Òé¸½Â¼ V1.3¡·±àĞ´
-	                    Õë¶Ô»úÆ÷ÈË¼ä½»»¥Êı¾İ 
+  * @brief          : æ ¹æ®ã€ŠRoboMaster_è£åˆ¤ç³»ç»Ÿä¸²å£åè®®é™„å½• V1.3ã€‹ç¼–å†™
+	                    é’ˆå¯¹æœºå™¨äººé—´äº¤äº’æ•°æ® 
   ******************************************************************************
   */
 
-/* Ä¿Â¼begin */
+/* ç›®å½•begin */
 
-//**********»ñÈ¡Í¼ÏñÊı¾İÖ¡
-//********************»ñÈ¡Ö±ÏßÊı¾İÖ¡
-//********************»ñÈ¡¾ØĞÎÊı¾İÖ¡
-//********************»ñÈ¡ÕûÔ²Êı¾İÖ¡
-//********************»ñÈ¡ÍÖÔ²Êı¾İÖ¡
-//********************»ñÈ¡Ô²»¡Êı¾İÖ¡
-//********************»ñÈ¡¸¡µãÊıÊı¾İÖ¡
-//********************»ñÈ¡ÕûĞÍÊıÊı¾İÖ¡
-//********************»ñÈ¡×Ö·ûÊı¾İÖ¡
-//**********·¢ËÍÖ¡Êı¾İ
-//********************·¢ËÍ»æÖÆÒ»¸öÍ¼ĞÎÖ¡Êı¾İ
-//********************·¢ËÍ»æÖÆ¶ş¸öÍ¼ĞÎÖ¡Êı¾İ
-//********************·¢ËÍ»æÖÆÎå¸öÍ¼ĞÎÖ¡Êı¾İ
-//********************·¢ËÍ»æÖÆÆß¸öÍ¼ĞÎÖ¡Êı¾İ
-//********************·¢ËÍ»æÖÆ×Ö·ûÖ¡Êı¾İ
-//**********´®¿Ú·¢ËÍÊı¾İ
+//**********è·å–å›¾åƒæ•°æ®å¸§
+//********************è·å–ç›´çº¿æ•°æ®å¸§
+//********************è·å–çŸ©å½¢æ•°æ®å¸§
+//********************è·å–æ•´åœ†æ•°æ®å¸§
+//********************è·å–æ¤­åœ†æ•°æ®å¸§
+//********************è·å–åœ†å¼§æ•°æ®å¸§
+//********************è·å–æµ®ç‚¹æ•°æ•°æ®å¸§
+//********************è·å–æ•´å‹æ•°æ•°æ®å¸§
+//********************è·å–å­—ç¬¦æ•°æ®å¸§
+//**********å‘é€å¸§æ•°æ®
+//********************å‘é€ç»˜åˆ¶ä¸€ä¸ªå›¾å½¢å¸§æ•°æ®
+//********************å‘é€ç»˜åˆ¶äºŒä¸ªå›¾å½¢å¸§æ•°æ®
+//********************å‘é€ç»˜åˆ¶äº”ä¸ªå›¾å½¢å¸§æ•°æ®
+//********************å‘é€ç»˜åˆ¶ä¸ƒä¸ªå›¾å½¢å¸§æ•°æ®
+//********************å‘é€ç»˜åˆ¶å­—ç¬¦å¸§æ•°æ®
+//**********ä¸²å£å‘é€æ•°æ®
 
-/* Ä¿Â¼end */
+/* ç›®å½•end */
 
 #include "ui_protocol.h"
 #include "crc.h"
 #include "string.h"
 #include "stdbool.h"
 #include "stdio.h"
+#include "referee_task.h"
 
-
-/* ÅäÖÃÇø begin */
-#define UI_huart huart6  //´®¿Ú½Ó¿Ú
-
-
+/* é…ç½®åŒº begin */
+#define UI_huart huart6  //ä¸²å£æ¥å£
+extern DMA_HandleTypeDef hdma_usart6_tx;
 extern UART_HandleTypeDef UI_huart;
 
 client_info_t client_info =
         {
-                .robot_id = 1,
-                .client_id = 0x0101,
+                .robot_id = 3,//çº¢ä¸‰
+                .client_id = 0x0103,
         };
 uint8_t client_tx_buf[128];
 
 /**
- * @brief ¸üĞÂºìÀ¶·½»úÆ÷ÈËĞÅÏ¢£¬ÔÚ²ÃÅĞÏµÍ³½ÓÊÜÖĞ¶ÏÖĞµ÷ÓÃ
+ * @brief æ›´æ–°çº¢è“æ–¹æœºå™¨äººä¿¡æ¯ï¼Œåœ¨è£åˆ¤ç³»ç»Ÿæ¥å—ä¸­æ–­ä¸­è°ƒç”¨
  *
  */
 void  client_info_update(struct referee_msg referee)
 {
 
-    if(referee.robot_status.robot_id>100){
+      if(referee.robot_status.robot_id>100){
 
-        client_info.robot_id = 103;
-        client_info.client_id = 0x0167;
+          client_info.robot_id = 103;
+          client_info.client_id = 0x0167;
 
-    }else{
-        client_info.robot_id = 3;
-        client_info.client_id = 0x0103;
+      }else{
+            client_info.robot_id = 3;
+            client_info.client_id = 0x0103;
 
-    }
+      }
 }
-/* ÅäÖÃÇø end */
+/* é…ç½®åŒº end */
 
-/******************************»ñÈ¡Í¼ÏñÊı¾İÖ¡begin******************************/
+/******************************è·å–å›¾åƒæ•°æ®å¸§begin******************************/
 
 /**
-  * @brief  »ñÈ¡Ö±ÏßÊı¾İÖ¡
+  * @brief  è·å–ç›´çº¿æ•°æ®å¸§
   * @param
-  * @retval Í¼ĞÎÊı¾İ½á¹¹Ìå
+  * @retval å›¾å½¢æ•°æ®ç»“æ„ä½“
   */
-graphic_data_struct_t draw_line(char *name,  //Í¼ĞÎÃû
-                                uint8_t operate_tpye,  //Í¼ĞÎ²Ù×÷
-                                uint8_t layer,  //Í¼²ãÊı£¬0~9
-                                uint8_t color,  //ÑÕÉ«
-                                uint16_t width,  //ÏßÌõ¿í¶È
-                                uint16_t start_x,  //Æğµã x ×ø±ê
-                                uint16_t start_y,  //Æğµã y ×ø±ê
-                                uint16_t end_x,  //ÖÕµã x ×ø±ê
-                                uint16_t end_y)  //ÖÕµã y ×ø±ê
+graphic_data_struct_t draw_line(char *name,  //å›¾å½¢å
+                                uint8_t operate_tpye,  //å›¾å½¢æ“ä½œ
+                                uint8_t layer,  //å›¾å±‚æ•°ï¼Œ0~9
+                                uint8_t color,  //é¢œè‰²
+                                uint16_t width,  //çº¿æ¡å®½åº¦
+                                uint16_t start_x,  //èµ·ç‚¹ x åæ ‡
+                                uint16_t start_y,  //èµ·ç‚¹ y åæ ‡
+                                uint16_t end_x,  //ç»ˆç‚¹ x åæ ‡
+                                uint16_t end_y)  //ç»ˆç‚¹ y åæ ‡
 {
     graphic_data_struct_t data;
 
@@ -106,19 +105,19 @@ graphic_data_struct_t draw_line(char *name,  //Í¼ĞÎÃû
 }
 
 /**
-  * @brief  »ñÈ¡¾ØĞÎÊı¾İÖ¡
+  * @brief  è·å–çŸ©å½¢æ•°æ®å¸§
   * @param
-  * @retval Í¼ĞÎÊı¾İ½á¹¹Ìå
+  * @retval å›¾å½¢æ•°æ®ç»“æ„ä½“
   */
-graphic_data_struct_t draw_rectangle(char *name,  //Í¼ĞÎÃû
-                                     uint8_t operate_tpye,  //Í¼ĞÎ²Ù×÷
-                                     uint8_t layer,  //Í¼²ãÊı£¬0~9
-                                     uint8_t color,  //ÑÕÉ«DSFZa
-                                     uint16_t width,  //ÏßÌõ¿í¶È
-                                     uint16_t start_x,  //Æğµã x ×ø±ê
-                                     uint16_t start_y,  //Æğµã y ×ø±ê
-                                     uint16_t end_x,  //¶Ô½Ç¶¥µã x ×ø±ê
-                                     uint16_t end_y)  //¶Ô½Ç¶¥µã y ×ø±ê
+graphic_data_struct_t draw_rectangle(char *name,  //å›¾å½¢å
+                                     uint8_t operate_tpye,  //å›¾å½¢æ“ä½œ
+                                     uint8_t layer,  //å›¾å±‚æ•°ï¼Œ0~9
+                                     uint8_t color,  //é¢œè‰²DSFZa
+                                     uint16_t width,  //çº¿æ¡å®½åº¦
+                                     uint16_t start_x,  //èµ·ç‚¹ x åæ ‡
+                                     uint16_t start_y,  //èµ·ç‚¹ y åæ ‡
+                                     uint16_t end_x,  //å¯¹è§’é¡¶ç‚¹ x åæ ‡
+                                     uint16_t end_y)  //å¯¹è§’é¡¶ç‚¹ y åæ ‡
 {
     graphic_data_struct_t data;
 
@@ -140,18 +139,18 @@ graphic_data_struct_t draw_rectangle(char *name,  //Í¼ĞÎÃû
 }
 
 /**
-  * @brief  »ñÈ¡ÕûÔ²Êı¾İÖ¡
+  * @brief  è·å–æ•´åœ†æ•°æ®å¸§
   * @param
-  * @retval Í¼ĞÎÊı¾İ½á¹¹Ìå
+  * @retval å›¾å½¢æ•°æ®ç»“æ„ä½“
   */
-graphic_data_struct_t draw_circle(char *name,  //Í¼ĞÎÃû
-                                  uint8_t operate_tpye,  //Í¼ĞÎ²Ù×÷
-                                  uint8_t layer,  //Í¼²ãÊı£¬0~9
-                                  uint8_t color,  //ÑÕÉ«
-                                  uint16_t width,  //ÏßÌõ¿í¶È
-                                  uint16_t ciclemid_x,  //Ô²ĞÄ x ×ø±ê
-                                  uint16_t ciclemid_y,  //Ô²ĞÄ y ×ø±ê
-                                  uint16_t radius)  //°ë¾¶
+graphic_data_struct_t draw_circle(char *name,  //å›¾å½¢å
+                                  uint8_t operate_tpye,  //å›¾å½¢æ“ä½œ
+                                  uint8_t layer,  //å›¾å±‚æ•°ï¼Œ0~9
+                                  uint8_t color,  //é¢œè‰²
+                                  uint16_t width,  //çº¿æ¡å®½åº¦
+                                  uint16_t ciclemid_x,  //åœ†å¿ƒ x åæ ‡
+                                  uint16_t ciclemid_y,  //åœ†å¿ƒ y åæ ‡
+                                  uint16_t radius)  //åŠå¾„
 {
     graphic_data_struct_t data;
 
@@ -173,19 +172,19 @@ graphic_data_struct_t draw_circle(char *name,  //Í¼ĞÎÃû
 }
 
 /**
-  * @brief  »ñÈ¡ÍÖÔ²Êı¾İÖ¡
+  * @brief  è·å–æ¤­åœ†æ•°æ®å¸§
   * @param
-  * @retval Í¼ĞÎÊı¾İ½á¹¹Ìå
+  * @retval å›¾å½¢æ•°æ®ç»“æ„ä½“
   */
-graphic_data_struct_t draw_ellipse(char *name,  //Í¼ĞÎÃû
-                                   uint8_t operate_tpye,  //Í¼ĞÎ²Ù×÷
-                                   uint8_t layer,  //Í¼²ãÊı£¬0~9
-                                   uint8_t color,  //ÑÕÉ«
-                                   uint16_t width,  //ÏßÌõ¿í¶È
-                                   uint16_t start_x,  //Ô²ĞÄ x ×ø±ê
-                                   uint16_t start_y,  //Ô²ĞÄ y ×ø±ê
-                                   uint16_t end_x,  //x °ëÖá³¤¶È
-                                   uint16_t end_y)  //y °ëÖá³¤¶È
+graphic_data_struct_t draw_ellipse(char *name,  //å›¾å½¢å
+                                   uint8_t operate_tpye,  //å›¾å½¢æ“ä½œ
+                                   uint8_t layer,  //å›¾å±‚æ•°ï¼Œ0~9
+                                   uint8_t color,  //é¢œè‰²
+                                   uint16_t width,  //çº¿æ¡å®½åº¦
+                                   uint16_t start_x,  //åœ†å¿ƒ x åæ ‡
+                                   uint16_t start_y,  //åœ†å¿ƒ y åæ ‡
+                                   uint16_t end_x,  //x åŠè½´é•¿åº¦
+                                   uint16_t end_y)  //y åŠè½´é•¿åº¦
 {
     graphic_data_struct_t data;
 
@@ -207,21 +206,21 @@ graphic_data_struct_t draw_ellipse(char *name,  //Í¼ĞÎÃû
 }
 
 /**
-  * @brief  »ñÈ¡Ô²»¡Êı¾İÖ¡
+  * @brief  è·å–åœ†å¼§æ•°æ®å¸§
   * @param
-  * @retval Í¼ĞÎÊı¾İ½á¹¹Ìå
+  * @retval å›¾å½¢æ•°æ®ç»“æ„ä½“
   */
-graphic_data_struct_t draw_arc(char *name,  //Í¼ĞÎÃû
-                               uint8_t operate_tpye,  //Í¼ĞÎ²Ù×÷
-                               uint8_t layer,  //Í¼²ãÊı£¬0~9
-                               uint8_t color,  //ÑÕÉ«
-                               uint16_t start_angle,  //ÆğÊ¼½Ç¶È
-                               uint16_t end_angle,  //ÖÕÖ¹½Ç¶È
-                               uint16_t width,  //ÏßÌõ¿í¶È
-                               uint16_t circlemin_x,  //Ô²ĞÄ x ×ø±ê
-                               uint16_t circlemin_y,  //Ô²ĞÄ y ×ø±ê
-                               uint16_t end_x,  //x °ëÖá³¤¶È
-                               uint16_t end_y)  //y °ëÖá³¤¶È
+graphic_data_struct_t draw_arc(char *name,  //å›¾å½¢å
+                               uint8_t operate_tpye,  //å›¾å½¢æ“ä½œ
+                               uint8_t layer,  //å›¾å±‚æ•°ï¼Œ0~9
+                               uint8_t color,  //é¢œè‰²
+                               uint16_t start_angle,  //èµ·å§‹è§’åº¦
+                               uint16_t end_angle,  //ç»ˆæ­¢è§’åº¦
+                               uint16_t width,  //çº¿æ¡å®½åº¦
+                               uint16_t circlemin_x,  //åœ†å¿ƒ x åæ ‡
+                               uint16_t circlemin_y,  //åœ†å¿ƒ y åæ ‡
+                               uint16_t end_x,  //x åŠè½´é•¿åº¦
+                               uint16_t end_y)  //y åŠè½´é•¿åº¦
 {
     graphic_data_struct_t data;
 
@@ -243,20 +242,20 @@ graphic_data_struct_t draw_arc(char *name,  //Í¼ĞÎÃû
 }
 
 /**
-  * @brief  »ñÈ¡¸¡µãÊıÊı¾İÖ¡
+  * @brief  è·å–æµ®ç‚¹æ•°æ•°æ®å¸§
   * @param
-  * @retval Í¼ĞÎÊı¾İ½á¹¹Ìå
+  * @retval å›¾å½¢æ•°æ®ç»“æ„ä½“
   */
-graphic_data_struct_t draw_float(char *name,  //Í¼ĞÎÃû
-                                 uint8_t operate_tpye,  //Í¼ĞÎ²Ù×÷
-                                 uint8_t layer,  //Í¼²ãÊı£¬0~9
-                                 uint8_t color,  //ÑÕÉ«
-                                 uint16_t size,  //×ÖÌå´óĞ¡
-                                 uint16_t decimal,  //Ğ¡ÊıÎ»ÓĞĞ§¸öÊı
-                                 uint16_t width,  //ÏßÌõ¿í¶È
-                                 uint16_t start_x,  //Æğµã x ×ø±ê
-                                 uint16_t start_y,  //Æğµã y ×ø±ê
-                                 int32_t num)  //³ËÒÔ 1000 ºó£¬ÒÔ 32 Î»ÕûĞÍÊı£¬int32_t
+graphic_data_struct_t draw_float(char *name,  //å›¾å½¢å
+                                 uint8_t operate_tpye,  //å›¾å½¢æ“ä½œ
+                                 uint8_t layer,  //å›¾å±‚æ•°ï¼Œ0~9
+                                 uint8_t color,  //é¢œè‰²
+                                 uint16_t size,  //å­—ä½“å¤§å°
+                                 uint16_t decimal,  //å°æ•°ä½æœ‰æ•ˆä¸ªæ•°
+                                 uint16_t width,  //çº¿æ¡å®½åº¦
+                                 uint16_t start_x,  //èµ·ç‚¹ x åæ ‡
+                                 uint16_t start_y,  //èµ·ç‚¹ y åæ ‡
+                                 int32_t num)  //ä¹˜ä»¥ 1000 åï¼Œä»¥ 32 ä½æ•´å‹æ•°ï¼Œint32_t
 {
     graphic_data_struct_t data;
 
@@ -278,19 +277,19 @@ graphic_data_struct_t draw_float(char *name,  //Í¼ĞÎÃû
 }
 
 /**
-  * @brief  »ñÈ¡ÕûĞÍÊıÊı¾İÖ¡
+  * @brief  è·å–æ•´å‹æ•°æ•°æ®å¸§
   * @param
-  * @retval Í¼ĞÎÊı¾İ½á¹¹Ìå
+  * @retval å›¾å½¢æ•°æ®ç»“æ„ä½“
   */
-graphic_data_struct_t draw_int(char *name,  //Í¼ĞÎÃû
-                               uint8_t operate_tpye,  //Í¼ĞÎ²Ù×÷
-                               uint8_t layer,  //Í¼²ãÊı£¬0~9
-                               uint8_t color,  //ÑÕÉ«
-                               uint16_t size,  //×ÖÌå´óĞ¡
-                               uint16_t width,  //ÏßÌõ¿í¶È
-                               uint16_t start_x,  //Æğµã x ×ø±ê
-                               uint16_t start_y,  //Æğµã y ×ø±ê
-                               int32_t num)  //32 Î»ÕûĞÍÊı£¬int32_t
+graphic_data_struct_t draw_int(char *name,  //å›¾å½¢å
+                               uint8_t operate_tpye,  //å›¾å½¢æ“ä½œ
+                               uint8_t layer,  //å›¾å±‚æ•°ï¼Œ0~9
+                               uint8_t color,  //é¢œè‰²
+                               uint16_t size,  //å­—ä½“å¤§å°
+                               uint16_t width,  //çº¿æ¡å®½åº¦
+                               uint16_t start_x,  //èµ·ç‚¹ x åæ ‡
+                               uint16_t start_y,  //èµ·ç‚¹ y åæ ‡
+                               int32_t num)  //32 ä½æ•´å‹æ•°ï¼Œint32_t
 {
     graphic_data_struct_t data;
 
@@ -312,26 +311,26 @@ graphic_data_struct_t draw_int(char *name,  //Í¼ĞÎÃû
 }
 
 /**
-  * @brief  »ñÈ¡×Ö·ûÊı¾İÖ¡
-  * @param  operate_tpye Í¼ĞÎ²Ù×÷
-	* @param  layer Í¼²ãÊı£¬0~9
-	* @param  color ÑÕÉ«
-	* @param  size ×ÖÌå´óĞ¡
-	* @param  length ×Ö·û³¤¶È
-	* @param  width ÏßÌõ¿í¶È
-	* @param  start_x Æğµã x ×ø±ê
-	* @param  start_y Æğµã y ×ø±ê
-  * @retval Í¼ĞÎÊı¾İ½á¹¹Ìå
+  * @brief  è·å–å­—ç¬¦æ•°æ®å¸§
+  * @param  operate_tpye å›¾å½¢æ“ä½œ
+	* @param  layer å›¾å±‚æ•°ï¼Œ0~9
+	* @param  color é¢œè‰²
+	* @param  size å­—ä½“å¤§å°
+	* @param  length å­—ç¬¦é•¿åº¦
+	* @param  width çº¿æ¡å®½åº¦
+	* @param  start_x èµ·ç‚¹ x åæ ‡
+	* @param  start_y èµ·ç‚¹ y åæ ‡
+  * @retval å›¾å½¢æ•°æ®ç»“æ„ä½“
   */
-graphic_data_struct_t draw_char(char *name,  //Í¼ĞÎÃû
-                                uint8_t operate_tpye,  //Í¼ĞÎ²Ù×÷
-                                uint8_t layer,  //Í¼²ãÊı£¬0~9
-                                uint8_t color,  //ÑÕÉ«
-                                uint16_t size,  //×ÖÌå´óĞ¡
-                                uint16_t length,  //×Ö·û³¤¶È
-                                uint16_t width,  //ÏßÌõ¿í¶È
-                                uint16_t start_x,  //Æğµã x ×ø±ê
-                                uint16_t start_y)  //Æğµã y ×ø±ê
+graphic_data_struct_t draw_char(char *name,  //å›¾å½¢å
+                                uint8_t operate_tpye,  //å›¾å½¢æ“ä½œ
+                                uint8_t layer,  //å›¾å±‚æ•°ï¼Œ0~9
+                                uint8_t color,  //é¢œè‰²
+                                uint16_t size,  //å­—ä½“å¤§å°
+                                uint16_t length,  //å­—ç¬¦é•¿åº¦
+                                uint16_t width,  //çº¿æ¡å®½åº¦
+                                uint16_t start_x,  //èµ·ç‚¹ x åæ ‡
+                                uint16_t start_y)  //èµ·ç‚¹ y åæ ‡
 {
     graphic_data_struct_t data;
 
@@ -352,12 +351,12 @@ graphic_data_struct_t draw_char(char *name,  //Í¼ĞÎÃû
     return data;
 }
 
-/******************************»ñÈ¡Í¼ÏñÊı¾İÖ¡end******************************/
+/******************************è·å–å›¾åƒæ•°æ®å¸§end******************************/
 
-/******************************·¢ËÍÖ¡Êı¾İbegin******************************/
+/******************************å‘é€å¸§æ•°æ®begin******************************/
 
 /**
-	* @brief  ·¢ËÍ»æÖÆÒ»¸öÍ¼ĞÎÖ¡Êı¾İ
+	* @brief  å‘é€ç»˜åˆ¶ä¸€ä¸ªå›¾å½¢å¸§æ•°æ®
   * @param
   * @retval
   */
@@ -366,33 +365,33 @@ uint8_t client_send_single_graphic(ext_client_custom_graphic_single_t data)
     frame_t frame;
     ext_student_interactive_header_data_t data_header;
 
-    /* Ö¡Í· */
+    /* å¸§å¤´ */
     frame.frame_header.SOF = 0xA5;
     frame.frame_header.data_length = LEN_ID_draw_one_graphic;
     frame.frame_header.seq = 0;
     memcpy(client_tx_buf, &frame.frame_header, 4);
     Append_CRC8_Check_Sum(client_tx_buf, 5);
 
-    /* ÃüÁîÂëID */
+    /* å‘½ä»¤ç ID */
     frame.cmd_id = 0x301;
     memcpy(&client_tx_buf[5], (void*)&frame.cmd_id, 2);
 
-    /* Êı¾İ¶Î */
+    /* æ•°æ®æ®µ */
     data_header.data_cmd_id = ID_draw_one_graphic;
     data_header.sender_ID = client_info.robot_id;
     data_header.receiver_ID = client_info.client_id;
     memcpy(&client_tx_buf[7], &data_header, 6);
     memcpy(&client_tx_buf[13], &data.grapic_data_struct, 15);
 
-    /* Ö¡Î² */
+    /* å¸§å°¾ */
     Append_CRC16_Check_Sum(client_tx_buf, 5 + 2 + LEN_ID_draw_one_graphic + 2);
 
-    /* ·¢ËÍ */
+    /* å‘é€ */
     return uart_send_data(client_tx_buf, 5 + 2 + LEN_ID_draw_one_graphic + 2);
 }
 
 /**
-	* @brief  ·¢ËÍ»æÖÆ¶ş¸öÍ¼ĞÎÖ¡Êı¾İ
+	* @brief  å‘é€ç»˜åˆ¶äºŒä¸ªå›¾å½¢å¸§æ•°æ®
   * @param
   * @retval
   */
@@ -401,33 +400,33 @@ uint8_t client_send_double_graphic(ext_client_custom_graphic_double_t data)
     frame_t frame;
     ext_student_interactive_header_data_t data_header;
 
-    /* Ö¡Í· */
+    /* å¸§å¤´ */
     frame.frame_header.SOF = 0xA5;
     frame.frame_header.data_length = LEN_ID_draw_two_graphic;
     frame.frame_header.seq = 0;
     memcpy(client_tx_buf, &frame.frame_header, 4);
     Append_CRC8_Check_Sum(client_tx_buf, 5);
 
-    /* ÃüÁîÂëID */
+    /* å‘½ä»¤ç ID */
     frame.cmd_id = 0x301;
     memcpy(&client_tx_buf[5], (void*)&frame.cmd_id, 2);
 
-    /* Êı¾İ¶Î */
+    /* æ•°æ®æ®µ */
     data_header.data_cmd_id = ID_draw_two_graphic;
     data_header.sender_ID = client_info.robot_id;
     data_header.receiver_ID = client_info.client_id;
     memcpy(&client_tx_buf[7], &data_header, 6);
     memcpy(&client_tx_buf[13], data.grapic_data_struct, 15*2);
 
-    /* Ö¡Î² */
+    /* å¸§å°¾ */
     Append_CRC16_Check_Sum(client_tx_buf, 5 + 2 + LEN_ID_draw_two_graphic + 2);
 
-    /* ·¢ËÍ */
+    /* å‘é€ */
     return uart_send_data(client_tx_buf, 5 + 2 + LEN_ID_draw_two_graphic + 2);
 }
 
 /**
-	* @brief  ·¢ËÍ»æÖÆÎå¸öÍ¼ĞÎÖ¡Êı¾İ
+	* @brief  å‘é€ç»˜åˆ¶äº”ä¸ªå›¾å½¢å¸§æ•°æ®
   * @param
   * @retval
   */
@@ -436,33 +435,33 @@ uint8_t client_send_five_graphic(ext_client_custom_graphic_five_t data)
     frame_t frame;
     ext_student_interactive_header_data_t data_header;
 
-    /* Ö¡Í· */
+    /* å¸§å¤´ */
     frame.frame_header.SOF = 0xA5;
     frame.frame_header.data_length = LEN_ID_draw_five_graphic;
     frame.frame_header.seq = 0;
     memcpy(client_tx_buf, &frame.frame_header, 4);
     Append_CRC8_Check_Sum(client_tx_buf, 5);
 
-    /* ÃüÁîÂëID */
+    /* å‘½ä»¤ç ID */
     frame.cmd_id = 0x301;
     memcpy(&client_tx_buf[5], (void*)&frame.cmd_id, 2);
 
-    /* Êı¾İ¶Î */
+    /* æ•°æ®æ®µ */
     data_header.data_cmd_id = ID_draw_five_graphic;
     data_header.sender_ID = client_info.robot_id;
     data_header.receiver_ID = client_info.client_id;
     memcpy(&client_tx_buf[7], &data_header, 6);
     memcpy(&client_tx_buf[13], data.grapic_data_struct, 15*5);
 
-    /* Ö¡Î² */
+    /* å¸§å°¾ */
     Append_CRC16_Check_Sum(client_tx_buf, 5 + 2 + LEN_ID_draw_five_graphic + 2);
 
-    /* ·¢ËÍ */
+    /* å‘é€ */
     return uart_send_data(client_tx_buf, 5 + 2 + LEN_ID_draw_five_graphic + 2);
 }
 
 /**
-	* @brief  ·¢ËÍ»æÖÆÆß¸öÍ¼ĞÎÖ¡Êı¾İ
+	* @brief  å‘é€ç»˜åˆ¶ä¸ƒä¸ªå›¾å½¢å¸§æ•°æ®
   * @param
   * @retval
   */
@@ -471,33 +470,33 @@ uint8_t client_send_seven_graphic(ext_client_custom_graphic_seven_t data)
     frame_t frame;
     ext_student_interactive_header_data_t data_header;
 
-    /* Ö¡Í· */
+    /* å¸§å¤´ */
     frame.frame_header.SOF = 0xA5;
     frame.frame_header.data_length = LEN_ID_draw_seven_graphic;
     frame.frame_header.seq = 0;
     memcpy(client_tx_buf, &frame.frame_header, 4);
     Append_CRC8_Check_Sum(client_tx_buf, 5);
 
-    /* ÃüÁîÂëID */
+    /* å‘½ä»¤ç ID */
     frame.cmd_id = 0x301;
     memcpy(&client_tx_buf[5], (void*)&frame.cmd_id, 2);
 
-    /* Êı¾İ¶Î */
+    /* æ•°æ®æ®µ */
     data_header.data_cmd_id = ID_draw_seven_graphic;
     data_header.sender_ID = client_info.robot_id;
     data_header.receiver_ID = client_info.client_id;
     memcpy(&client_tx_buf[7], &data_header, 6);
     memcpy(&client_tx_buf[13], data.grapic_data_struct, 15*7);
 
-    /* Ö¡Î² */
+    /* å¸§å°¾ */
     Append_CRC16_Check_Sum(client_tx_buf, 5 + 2 + LEN_ID_draw_seven_graphic + 2);
 
-    /* ·¢ËÍ */
+    /* å‘é€ */
     return uart_send_data(client_tx_buf, 5 + 2 + LEN_ID_draw_seven_graphic + 2);
 }
 
 /**
-	* @brief  ·¢ËÍ»æÖÆ×Ö·ûÖ¡Êı¾İ
+	* @brief  å‘é€ç»˜åˆ¶å­—ç¬¦å¸§æ•°æ®
   * @param
   * @retval
   */
@@ -506,18 +505,18 @@ uint8_t client_send_char(ext_client_custom_character_t data)
     frame_t frame;
     ext_student_interactive_header_data_t data_header;
 
-    /* Ö¡Í· */
+    /* å¸§å¤´ */
     frame.frame_header.SOF = 0xA5;
     frame.frame_header.data_length = LEN_ID_draw_char_graphic;
     frame.frame_header.seq = 0;
     memcpy(client_tx_buf, &frame.frame_header, 4);
     Append_CRC8_Check_Sum(client_tx_buf, 5);
 
-    /* ÃüÁîÂëID */
+    /* å‘½ä»¤ç ID */
     frame.cmd_id = 0x301;
     memcpy(&client_tx_buf[5], (void*)&frame.cmd_id, 2);
 
-    /* Êı¾İ¶Î */
+    /* æ•°æ®æ®µ */
     data_header.data_cmd_id = ID_draw_char_graphic;
     data_header.sender_ID = client_info.robot_id;
     data_header.receiver_ID = client_info.client_id;
@@ -525,16 +524,16 @@ uint8_t client_send_char(ext_client_custom_character_t data)
     memcpy(&client_tx_buf[13], &data.grapic_data_struct, 15);
     memcpy(&client_tx_buf[28], data.data, 30);
 
-    /* Ö¡Î² */
+    /* å¸§å°¾ */
     Append_CRC16_Check_Sum(client_tx_buf, 5 + 2 + LEN_ID_draw_char_graphic + 2);
 
-    /* ·¢ËÍ */
+    /* å‘é€ */
     return uart_send_data(client_tx_buf, 5 + 2 + LEN_ID_draw_char_graphic + 2);
 }
 
 /**
-	* @brief  É¾³ıÒ»¸öÍ¼²ã
-  * @param  uint8_t delete_layer É¾³ıµÄÍ¼²ãÊı
+	* @brief  åˆ é™¤ä¸€ä¸ªå›¾å±‚
+  * @param  uint8_t delete_layer åˆ é™¤çš„å›¾å±‚æ•°
   * @retval
   */
 uint8_t client_graphic_delete_update(uint8_t delete_layer)
@@ -542,45 +541,53 @@ uint8_t client_graphic_delete_update(uint8_t delete_layer)
     frame_t frame;
     ext_student_interactive_header_data_t data_header;
 
-    /* Ö¡Í· */
+    /* å¸§å¤´ */
     frame.frame_header.SOF = 0xA5;
     frame.frame_header.data_length = LEN_ID_draw_char_graphic;
     frame.frame_header.seq = 0;
     memcpy(client_tx_buf, &frame.frame_header, 4);
     Append_CRC8_Check_Sum(client_tx_buf, 5);
 
-    /* ÃüÁîÂëID */
+    /* å‘½ä»¤ç ID */
     frame.cmd_id = 0x301;
     memcpy(&client_tx_buf[5], (void*)&frame.cmd_id, 2);
 
-    /* Êı¾İ¶Î */
+    /* æ•°æ®æ®µ */
     data_header.data_cmd_id = ID_delete_graphic;
     data_header.sender_ID = client_info.robot_id;
     data_header.receiver_ID = client_info.client_id;
     memcpy(&client_tx_buf[7], &data_header, 6);
-    client_tx_buf[13] = 1;//É¾³ıµ¥¸öÍ¼²ã
-    client_tx_buf[14] = delete_layer;//É¾³ıÍ¼²ã
+    client_tx_buf[13] = 1;//åˆ é™¤å•ä¸ªå›¾å±‚
+    client_tx_buf[14] = delete_layer;//åˆ é™¤å›¾å±‚
 
-    /* Ö¡Î² */
+    /* å¸§å°¾ */
     Append_CRC16_Check_Sum(client_tx_buf, 5 + 2 + LEN_ID_delete_graphic + 2);
 
-    /* ·¢ËÍ */
+    /* å‘é€ */
     return uart_send_data(client_tx_buf, 5 + 2 + LEN_ID_delete_graphic + 2);
 }
 
-/******************************·¢ËÍÖ¡Êı¾İend****************************************/
+/******************************å‘é€å¸§æ•°æ®end****************************************/
 
-/******************************´®¿Ú·¢ËÍÊı¾İbegin************************************/
+/******************************ä¸²å£å‘é€æ•°æ®begin************************************/
 
 /**
-	* @brief  ´®¿Ú·¢ËÍÊı¾İ
+	* @brief  ä¸²å£å‘é€æ•°æ®
   * @param
   * @retval
   */
 uint8_t uart_send_data(uint8_t *txbuf, uint16_t length)
 {
-    return HAL_UART_Transmit(&UI_huart, txbuf, length,100);
+
+    //å¼€å§‹å‘é€æ•°æ®
+
+    return  HAL_UART_Transmit_DMA(&huart6, txbuf, length);
+
 
 }
 
-/******************************´®¿Ú·¢ËÍÊı¾İend**************************************/
+
+
+
+///******************************ä¸²å£å‘é€æ•°æ®end**************************************/
+///******************************ä¸²å£å‘é€æ•°æ®end**************************************/

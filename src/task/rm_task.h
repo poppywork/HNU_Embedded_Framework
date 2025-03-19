@@ -76,6 +76,16 @@ struct chassis_cmd_msg
     chassis_mode_e last_mode;  // 上一次底盘控制模式
 };
 
+
+/**
+ * @brief cmd发布的ui控制数据,由referee订阅
+ */
+ struct ui_cmd_msg{//需要发布ui初始化信息
+
+     float ui_init;
+
+ };
+
 /**
  * @brief cmd发布的云台控制数据,由gimbal订阅
  */

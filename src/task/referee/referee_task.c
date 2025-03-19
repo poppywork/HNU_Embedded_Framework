@@ -65,20 +65,12 @@ static custom_client_data_t                    custom_client_data;
 
 /* -------------------------------- 线程间通讯话题相关 ------------------------------- */
 static publisher_t *pub_refree;
-static subscriber_t *sub_cmd,*sub_ins,*sub_gim;
-static void trans_sub_pull(void);
-static void trans_pub_push(void);
-static void trans_sub_init(void);
-static void trans_pub_init(void);
-
-
-
-
-
-
-
-// 线程同步信号量
-static struct rt_semaphore rx_sem;
+static subscriber_t *sub_gim,*sub_chassis,*sub_shoot,*sub_ui;
+static struct gimbal_cmd_msg gim_cmd;
+static struct referee_msg referee_data;
+static struct shoot_cmd_msg  shoot_cmd;
+static struct chassis_cmd_msg chassis_cmd;
+static struct ui_cmd_msg ui_cmd;
 
 /**
  * @brief trans 线程中所有订阅者初始化（如有其它数据需求可在其中添加）
@@ -86,9 +78,10 @@ static struct rt_semaphore rx_sem;
 static void refree_sub_init(void)
 {
 
-    sub_cmd = sub_register("gim_cmd", sizeof(struct gimbal_cmd_msg));
-    sub_ins = sub_register("ins_msg", sizeof(struct ins_msg));
-    sub_gim = sub_register("gim_fdb", sizeof(struct gimbal_fdb_msg));
+    sub_gim = sub_register("gim_cmd", sizeof(struct gimbal_cmd_msg));
+    sub_chassis = sub_register("chassis_cmd", sizeof(struct chassis_cmd_msg));
+    sub_shoot = sub_register("shoot_cmd", sizeof(struct shoot_cmd_msg));
+    sub_ui = sub_register("ui_cmd", sizeof(struct ui_cmd_msg));
 
 }
 
@@ -97,9 +90,10 @@ static void refree_sub_init(void)
  */
 static void refree_sub_pull(void)
 {
-    sub_get_msg(sub_cmd, &gim_cmd);
-    sub_get_msg(sub_ins, &ins_data);
-    sub_get_msg(sub_gim, &gim_fdb);
+    sub_get_msg(sub_gim, &gim_cmd);
+    sub_get_msg(sub_chassis, &chassis_cmd);
+    sub_get_msg(sub_shoot, &shoot_cmd);
+    sub_get_msg(sub_ui, &ui_cmd);
 }
 
 /**
@@ -107,7 +101,7 @@ static void refree_sub_pull(void)
  */
 static void refree_pub_init(void)
 {
-    pub_refree = pub_register("refree_fdb",sizeof(struct referee_msg));
+    pub_refree = pub_register("referee_fdb",sizeof(struct referee_msg));
 }
 
 /**
@@ -118,22 +112,18 @@ static void refree_pub_push(void)
     pub_push_msg(pub_refree,&referee_data);
 }
 
-uint8_t *  rx1_buf;
-uint8_t *rx2_buf;
-uint16_t dma_buf_num;
-
 /*裁判系统线程入口*/
 void referee_thread_entry(void *argument){
-
-    /*用户3pin串口初始化*/
-    /* DMA controller clock enable */
+    /* 手动使能 UART6 和 DMA 时钟（如果 BSP 未自动初始化）*/
+    __HAL_RCC_USART6_CLK_ENABLE();
     __HAL_RCC_DMA2_CLK_ENABLE();
-    /* DMA2_Stream1_IRQn interrupt configuration */
+
+    /* 配置 DMA 中断 */
     HAL_NVIC_SetPriority(DMA2_Stream1_IRQn, 0, 0);
     HAL_NVIC_EnableIRQ(DMA2_Stream1_IRQn);
-    /* DMA2_Stream6_IRQn interrupt configuration */
-    /* HAL_NVIC_SetPriority(DMA2_Stream6_IRQn, 0, 0);
-     HAL_NVIC_EnableIRQ(DMA2_Stream6_IRQn);*/
+    HAL_NVIC_SetPriority(DMA2_Stream6_IRQn, 0, 0);
+    HAL_NVIC_EnableIRQ(DMA2_Stream6_IRQn);
+
     huart6.Instance=USART6;
     huart6.Init.BaudRate=115200;
     huart6.Init.WordLength=UART_WORDLENGTH_8B;
@@ -161,8 +151,9 @@ void referee_thread_entry(void *argument){
     while (1) {
 
 
-        Ui_Send();        // 发送更新UI
-        Ui_Info_Update();
+        Ui_Send(ui_cmd);        // 发送更新UI
+        Ui_Info_Update(gim_cmd,chassis_cmd,shoot_cmd,referee_data);
+
 
         if ((hdma_usart6_rx.Instance->CR & DMA_SxCR_CT) == RESET) {
             Referee_Data_Unpack(RX_AgreementData_Buffer0, &Referee_Data_header, &Referee_Data);
@@ -176,9 +167,12 @@ void referee_thread_entry(void *argument){
         memcpy(&(referee_data.game_robot_HP),&game_robot_HP, sizeof(game_robot_HP_t));
         memcpy(&(referee_data.event_data),&game_robot_HP, sizeof(event_data_t));
 
-        client_info_update(referee_data);
+
+        client_info_update(referee_data);//识别自生红蓝,需要先提前设置兵种,判断相同兵种的红蓝状态
+
 
         refree_pub_push(); // 发布数据更新
+        refree_sub_pull();//订阅车辆状态相关数据
         rt_thread_mdelay(1);
     }
 }
@@ -359,6 +353,10 @@ void Referee_Data_Unpack()
 
 
 
+void DMA2_Stream6_IRQHandler(void) {
+    HAL_DMA_IRQHandler(&hdma_usart6_tx);
+}
+
 /*!串口接收*/
 void USART6_IRQHandler(void)
 {
@@ -393,8 +391,14 @@ void USART6_IRQHandler(void)
             fifo_s_puts(&RX_AgreementData_FIFO,(char *)RX_AgreementData_Buffer1,this_time_rx_len);
         }
     }
+    if(__HAL_UART_GET_FLAG(&huart6,UART_FLAG_TC)!=RESET)
+    {
+        __HAL_DMA_CLEAR_FLAG(&hdma_usart6_tx, DMA_FLAG_TCIF2_6); //清除DMA2_Steam7传输完成标志
+        __HAL_DMA_DISABLE(&hdma_usart6_tx);		//传输完成以后关闭串口DMA,缺了这一句会死机
+    }
     HAL_UART_IRQHandler(&huart6);
 }
+
 
 /**
  * @brief 裁判系统命令数据解包函数
@@ -499,6 +503,7 @@ void Referee_Data_Solve(uint8_t* frame)
             break;
     }
 }
+
 struct referee_msg *get_power_limit()
 {
     return &referee_data; // 返回结构体指针
