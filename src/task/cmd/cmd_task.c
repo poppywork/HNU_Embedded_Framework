@@ -613,8 +613,8 @@ static void remote_to_cmd_sbus(void)
     /*云台命令*/
     if (gim_cmd.ctrl_mode==GIMBAL_GYRO)
     {
-        gim_cmd.yaw = 0;
-        gim_cmd.yaw_down += rc_now->ch4 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_YAW ;
+        gim_cmd.yaw += rc_now->ch4 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_YAW ;
+        gim_cmd.yaw_down = 0;
         gim_cmd.pitch += rc_now->ch3 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_PIT ;
         gyro_yaw_inherit =gim_cmd.yaw;
         gyro_pitch_inherit =ins_data.pitch;
@@ -643,7 +643,7 @@ static void remote_to_cmd_sbus(void)
     case RC_UP:
         if(gim_cmd.ctrl_mode != GIMBAL_INIT && gim_cmd.ctrl_mode != GIMBAL_RELAX)
         {
-            if(trans_fdb.linear_z == 1 && gim_cmd.ctrl_mode == GIMBAL_AUTO)
+            if(trans_fdb.linear_z == 1 && gim_cmd.ctrl_mode == GIMBAL_AUTO && trans_fdb.game_progress == 4)
             {
                 chassis_cmd.ctrl_mode = CHASSIS_SPIN;
                 chassis_cmd.vw = (float) (rc_now->ch5) / RC_MAX_VALUE * ROTATE_RATIO_VW; // 小陀螺转速

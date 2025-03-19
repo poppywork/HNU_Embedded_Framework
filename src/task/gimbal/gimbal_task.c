@@ -169,7 +169,7 @@ void gimbal_thread_entry(void *argument)
                 gim_motor_ref[PITCH] = gim_cmd.pitch;
                 gim_motor_ref[YAW_DOWN] = gim_cmd.yaw_down;
                 // 底盘相对于云台归中值的角度，取负
-                gim_fdb.yaw_relative_angle = -yaw_down_motor_relive;
+                gim_fdb.yaw_relative_angle = -yaw_motor_relive;
                 gim_fdb.yaw_offset_angle=ins_data.yaw;//手动模式下时刻刷新，自瞄模式下不刷新
                 //auto_staus=1;
 
