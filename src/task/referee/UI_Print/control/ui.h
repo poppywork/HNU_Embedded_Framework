@@ -2,27 +2,23 @@
 #define __UI_H
 
 #include "main.h"
+#include "rm_task.h"
 
 typedef enum{
-	RP_1,      //Í¼²ã1~9
-	RP_2,
-	RP_3,
-	RP_4,
-	RP_5,
-	RP_6,
-	RP_7,
-	RP_8,
-	RP_9,
-	VISION_CYCLE_1,
-	VISION_CYCLE_2,
-	TOP_MODE_CYCLE_1,
-	TOP_MODE_CYCLE_2,
-	NUM,
+    Frc,
+    Rot,
+    Aim,
+    Heat_Indicator,
+    Cross_H,
+    Cross_V,
+    Aim_Frame,
+    Carline_L,
+    Carline_R,
 	
 	DYNAMIC_UI_NUM,
 }dynamic_ui_cnt_e;
 
 
 void My_Ui_Init(void);
-void Ui_Info_Update(void);
+void Ui_Info_Update(struct gimbal_cmd_msg gim_cmd,struct chassis_cmd_msg chassis_cmd,struct shoot_cmd_msg shoot_cmd,struct referee_msg referee);
 #endif

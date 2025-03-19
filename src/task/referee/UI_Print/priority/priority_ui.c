@@ -23,7 +23,7 @@
 #define HIGH_CHAR_PRIORITY_LEVEL 7  // 高优先级字符抢占图形UI的等级
 #define MID_CHAR_PRIORITY_LEVEL  5  // 中优先级字符抢占图形UI的等级
 
-#define SEND_INTERVAL        100 // 发送间隔时间(MS) [裁判系统上限是10HZ]
+#define SEND_INTERVAL        40 // 发送间隔时间(MS) [裁判系统上限是10HZ]
 #define PER_INIT_UI_TIMES    1   // 每次初始化的UI次数
 
 uint8_t send_test = 1;
@@ -33,15 +33,15 @@ uint8_t send_test = 1;
  * @return true 开始初始化
  * @return false 正常发送
  */
-bool Init_Ui_Condition()
+bool Init_Ui_Condition(struct ui_cmd_msg ui_cmd)
 {
-  if (send_test == 0)
+  if (ui_cmd.ui_init == 1)//应该替换成键位条件,按下一次初始化一次ui
   {
-    return false;
+    return true;
   }
   else
   {
-    return true;
+    return false;
   }
 }
 
@@ -892,7 +892,7 @@ ui_status_e Ui_Send_Add()
  * 
  */
 
-void Ui_Send()
+void Ui_Send(struct ui_cmd_msg ui_cmd)
 {
     static uint8_t is_initing_ui = 0;
     static uint8_t init_times = 0;
@@ -904,7 +904,7 @@ void Ui_Send()
     return;
   }
   /*收到初始化指令切换标志位**********************/
-  if (Init_Ui_Condition())
+  if (Init_Ui_Condition(ui_cmd))
   {
     if (is_initing_ui == 0)
     {
@@ -923,6 +923,7 @@ void Ui_Send()
     {
       is_initing_ui = 0;//初始化完毕
       init_times = 0;
+      send_test = 0;
     }
   }
 	else/*正常发送UI*/

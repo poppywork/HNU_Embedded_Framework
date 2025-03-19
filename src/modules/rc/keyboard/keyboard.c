@@ -156,4 +156,5 @@ void PC_Handle_kb(void)
     key_fsm(&km.shift_sta, rc_dbus_obj[0].kb.bit.SHIFT);
     key_fsm(&km.ctrl_sta, rc_dbus_obj[0].kb.bit.CTRL);
     key_fsm(&km.v_sta, rc_dbus_obj[0].kb.bit.V);
+    key_fsm(&km.b_sta, rc_dbus_obj[0].kb.bit.B);
 }
