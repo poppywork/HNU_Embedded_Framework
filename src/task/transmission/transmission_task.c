@@ -129,7 +129,6 @@ void transmission_task_entry(void* argument)
             heart_dt=dwt_get_time_ms();
         }
         Send_to_pc(rpy_tx_data);
-        //
 #ifndef BSP_USING_GIMBAL_CAN_RECEIVE
         Can_send(ins_data.gyro[2],ins_data.yaw_total_angle,send_msg[0]);
         Can_send(trans_fdb.angular_x,trans_fdb.angular_y,send_msg[1]);
@@ -151,8 +150,7 @@ void transmission_task_entry(void* argument)
 void Send_to_pc(RpyTypeDef data_r)
 {
     /*填充数据*/
-    //归中效果不好，直接pitch给0,不然波动有+-10度，对自瞄影响大·
-    pack_Rpy(&data_r, (gim_fdb.yaw_offset_angle - ins_data.yaw), (ins_data.pitch /*- gim_fdb.pit_offset_angle*/), ins_data.roll);
+    pack_Rpy(&data_r, (gim_fdb.yaw_offset_angle - ins_data.yaw), (ins_data.pitch - gim_fdb.pit_offset_angle), ins_data.roll);
     Check_Rpy(&data_r);
 
     rt_device_write(vs_port, 0, (uint8_t*)&data_r, sizeof(data_r));
@@ -237,7 +235,6 @@ static rt_err_t usb_input(rt_device_t dev, rt_size_t size)
                 if (rpy_rx_data.DATA[0]) {//相对角度控制
                     trans_fdb.yaw = -(*(int32_t *) &rpy_rx_data.DATA[1] / 1000.0);
                     trans_fdb.pitch = (*(int32_t *) &rpy_rx_data.DATA[5] / 1000.0);
-                    trans_fdb.roll = (*(int32_t *) &rpy_rx_data.DATA[9] / 1000.0);
                 }
                 else{//绝对角度控制
                     trans_fdb.yaw = -(*(int32_t *) &rpy_rx_data.DATA[1] / 1000.0);
@@ -309,59 +306,67 @@ void gimbal_down_rx_callback(rt_device_t dev, uint32_t id, uint8_t *data){
     gimbal_can = rt_device_find(CAN_GIMBAL);
     uint32_t data1;
     uint32_t data2;
+    uint16_t data3;
+    uint16_t data4;
+    uint8_t data5;
+    uint8_t data6;
+    uint16_t data7;
     // 找到对应的实例后再调用decode_dji_motor进行解析
-        if (dev == gimbal_can && id == send_msg[0].id)
+    if (dev == gimbal_can && id == send_msg[0].id)
+    {
+        uint8_t *rxbuff = data;
+        data1 = (uint32_t )rxbuff[0] | (((uint32_t )rxbuff[1]) << 8) | (((uint32_t )rxbuff[2]) << 16)
+                | (((uint32_t )rxbuff[3]) << 24) ;
+        data2 = (uint32_t )rxbuff[4] | (((uint32_t )rxbuff[5]) << 8) | (((uint32_t )rxbuff[6]) << 16)
+                | (((uint32_t )rxbuff[7]) << 24) ;
+        trans_fdb.gyro_down_z = *((float *)&data1);
+        trans_fdb.yaw_down_total_angle = *((float *)&data2);
+    }
+    else if (dev == gimbal_can && id == send_msg[1].id)
+    {
+        uint8_t *rxbuff = data;
+        // 从 CAN 报文中解析出数据
+        data3 = (uint16_t)rxbuff[0] << 8 | rxbuff[1];  // data1（uint16_t）
+        data4 = (uint16_t)rxbuff[2] << 8 | rxbuff[3];  // data2（uint16_t）
+        data5 = rxbuff[4];                              // data3（uint8_t）
+        data6 = rxbuff[5];                              // data4（uint8_t）
+        data7 = (uint16_t)rxbuff[6] << 8 | rxbuff[7];  // data5（uint16_t）
+        // 将解析出的数据赋值到目标变量
+        trans_fdb.chassis_power_limit = data3;
+        trans_fdb.chassis_buffer_energy = data4;
+        trans_fdb.linear_z = data5;
+        trans_fdb.game_progress = data6;
+        trans_fdb.shooter_17mm_cooling_heat = data7;
+    }
+    else if (dev == gimbal_can && id == send_msg[2].id)
+    {
+        uint8_t *rxbuff = data;
+        data1 = (uint32_t )rxbuff[0] | (((uint32_t )rxbuff[1]) << 8) | (((uint32_t )rxbuff[2]) << 16)
+                | (((uint32_t )rxbuff[3]) << 24) ;      // data1（float）
+        data3 = (uint16_t)rxbuff[4] << 8 | rxbuff[5];   // data2（uint16_t）
+        data5 = rxbuff[6];                              // data3（uint8_t）
+        data6 = rxbuff[7];                              // data4（uint8_t）
+        trans_fdb.angular_z= (*((float *)&data1));
+        if(trans_fdb.angular_z == -1)
         {
-            uint8_t *rxbuff = data;
-            data1 = (uint32_t )rxbuff[0] | (((uint32_t )rxbuff[1]) << 8) | (((uint32_t )rxbuff[2]) << 16)
-                    | (((uint32_t )rxbuff[3]) << 24) ;
-            data2 = (uint32_t )rxbuff[4] | (((uint32_t )rxbuff[5]) << 8) | (((uint32_t )rxbuff[6]) << 16)
-                    | (((uint32_t )rxbuff[7]) << 24) ;
-           trans_fdb.gyro_down_z = *((float *)&data1);
-           trans_fdb.yaw_down_total_angle = *((float *)&data2);
+            trans_fdb.angular_z=0;
         }
-        else if (dev == gimbal_can && id == send_msg[1].id)
-        {
-            uint8_t *rxbuff = data;
-            // 从 CAN 报文中解析出数据
-            uint16_t data3 = (uint16_t)rxbuff[0] << 8 | rxbuff[1];  // data1（uint16_t）
-            uint16_t data4 = (uint16_t)rxbuff[2] << 8 | rxbuff[3];  // data2（uint16_t）
-            uint8_t data5 = rxbuff[4];                              // data3（uint8_t）
-            uint8_t data6 = rxbuff[5];                              // data4（uint8_t）
-            uint16_t data7 = (uint16_t)rxbuff[6] << 8 | rxbuff[7];  // data5（uint16_t）
-            // 将解析出的数据赋值到目标变量
-            trans_fdb.chassis_power_limit = data3;
-            trans_fdb.chassis_buffer_energy = data4;
-            trans_fdb.robot_id = data5;
-            trans_fdb.game_progress = data6;
-            trans_fdb.shooter_17mm_cooling_heat = data7;
-        }
-        else if (dev == gimbal_can && id == send_msg[2].id)
-        {
-            uint8_t *rxbuff = data;
-            data1 = (uint32_t )rxbuff[0] | (((uint32_t )rxbuff[1]) << 8) | (((uint32_t )rxbuff[2]) << 16)
-                    | (((uint32_t )rxbuff[3]) << 24) ;
-            data2 = (uint32_t )rxbuff[4] | (((uint32_t )rxbuff[5]) << 8) | (((uint32_t )rxbuff[6]) << 16)
-                    | (((uint32_t )rxbuff[7]) << 24) ;
-            trans_fdb.angular_z= (*((float *)&data1));
-            if(trans_fdb.angular_z == -1)
-            {
-                trans_fdb.angular_z=0;
-            }
-            trans_fdb.angular_z_degree = trans_fdb.angular_z * RADIAN_COEF;
-            trans_fdb.linear_x = *((float *)&data2);
-        }
-        else if (dev == gimbal_can && id == send_msg[3].id)
-        {
-            uint8_t *rxbuff = data;
-            data1 = (uint32_t )rxbuff[0] | (((uint32_t )rxbuff[1]) << 8) | (((uint32_t )rxbuff[2]) << 16)
-                    | (((uint32_t )rxbuff[3]) << 24) ;
-            data2 = (uint32_t )rxbuff[4] | (((uint32_t )rxbuff[5]) << 8) | (((uint32_t )rxbuff[6]) << 16)
-                    | (((uint32_t )rxbuff[7]) << 24) ;
-            trans_fdb.linear_y = *((float *)&data1);
-            trans_fdb.linear_z = *((float *)&data2);
-        }
-        else{
+        trans_fdb.angular_z_degree = trans_fdb.angular_z * RADIAN_COEF;
+        trans_fdb.shooter_barrel_heat_limit = data3;
+        trans_fdb.armor_id = data5;
+        trans_fdb.hurt_type = data6;
+    }
+    else if (dev == gimbal_can && id == send_msg[3].id)
+    {
+        uint8_t *rxbuff = data;
+        data1 = (uint32_t )rxbuff[0] | (((uint32_t )rxbuff[1]) << 8) | (((uint32_t )rxbuff[2]) << 16)
+                | (((uint32_t )rxbuff[3]) << 24) ;
+        data2 = (uint32_t )rxbuff[4] | (((uint32_t )rxbuff[5]) << 8) | (((uint32_t )rxbuff[6]) << 16)
+                | (((uint32_t )rxbuff[7]) << 24) ;
+        trans_fdb.linear_y = *((float *)&data1);
+        trans_fdb.linear_x = *((float *)&data2);
+    }
+    else{
 
-        }
+    }
 }

@@ -1,16 +1,16 @@
- /**
- * @file rm_algorithm.h
- * @author ChuShicheng
- * @author modified by neozng
- * @brief  RM电控算法库,仅被应用层调用
- * @date 2023-09-04
- */
+/**
+* @file rm_algorithm.h
+* @author ChuShicheng
+* @author modified by neozng
+* @brief  RM电控算法库,仅被应用层调用
+* @date 2023-09-04
+*/
 
- /*
- * Change Logs:
- * Date            Author          Notes
- * 2023-09-04      ChuShicheng     first version
- */
+/*
+* Change Logs:
+* Date            Author          Notes
+* 2023-09-04      ChuShicheng     first version
+*/
 #ifndef _RM_TASK_H
 #define _RM_TASK_H
 
@@ -84,7 +84,7 @@ struct gimbal_cmd_msg
     gimbal_mode_e ctrl_mode;  // 当前云台控制模式
     gimbal_mode_e last_mode;  // 上一次云台控制模式
 };
- 
+
 /**
  * @brief cmd发布的云台控制数据,由shoot订阅
  */
@@ -119,13 +119,13 @@ struct gimbal_fdb_msg
 /**
  * @brief 底盘真实反馈状态数据,由chassis发布
  */
- struct chassis_fdb_msg
- {
-     float filter_x_pos_gim;
-     float filter_y_pos_gim;
-     float x_pos_gim;
-     float y_pos_gim;
- };
+struct chassis_fdb_msg
+{
+    float filter_x_pos_gim;
+    float filter_y_pos_gim;
+    float x_pos_gim;
+    float y_pos_gim;
+};
 
 /* ------------------------------ shoot反馈状态数据 ------------------------------ */
 /**
@@ -141,40 +141,42 @@ struct shoot_fdb_msg
 /**
  * @brief 下云台c板反馈状态数据,由transmission发布
  */
- struct trans_fdb_msg
- {
-     /*上位机自瞄数据*/
-     float yaw;
-     float pitch;
-     float roll;
-     float yaw_down;
-     float pitch_down;
-     rt_uint8_t heartbeat;
-     /*上位机导航数据*/
-     float linear_x;
-     float linear_y;
-     float linear_z;//标志位
-     //float angular_x;
-     //float angular_y;
-     float angular_z;
-     float angular_z_degree;
-     /*下云台yaw_down电机反馈状态数据*/
-     float yaw_down_total_angle;
-     float gyro_down_z;
-     /*下C板中转referee反馈状态数据*/
-     uint16_t chassis_power_limit;
-     uint16_t chassis_buffer_energy;
-     uint8_t robot_id;
-     uint8_t game_progress;
-     uint16_t shooter_17mm_cooling_heat;
- };
- /* ------------------------------ referee反馈状态数据 ------------------------------ */
+struct trans_fdb_msg
+{
+    /*上位机自瞄数据*/
+    float yaw;
+    float pitch;
+    float yaw_down;
+    float pitch_down;
+    rt_uint8_t heartbeat;
+    /*上位机导航数据*/
+    float linear_x;
+    float linear_y;
+    uint8_t linear_z;//标志位
+    //float angular_x;
+    //float angular_y;
+    float angular_z;
+    float angular_z_degree;
+    /*下云台yaw_down电机反馈状态数据*/
+    float yaw_down_total_angle;
+    float gyro_down_z;
+    /*下C板中转referee反馈状态数据*/
+    uint16_t chassis_power_limit;
+    uint16_t chassis_buffer_energy;
+    uint8_t robot_id;
+    uint8_t game_progress;
+    uint16_t shooter_17mm_cooling_heat;
+    uint16_t shooter_barrel_heat_limit;
+    uint8_t armor_id;
+    uint8_t hurt_type;
+};
+/* ------------------------------ referee反馈状态数据 ------------------------------ */
 /**
  * @brief 上位机反馈状态数据,由referee发布
  */
- struct referee_fdb_msg
- {
-     robot_status_t robot_status;
-     power_heat_data_t power_heat_data;
- };
+struct referee_fdb_msg
+{
+    robot_status_t robot_status;
+    power_heat_data_t power_heat_data;
+};
 #endif /* _RM_TASK_H */
