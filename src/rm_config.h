@@ -100,7 +100,7 @@
 #define MAX_CHASSIS_VY_SPEED_LOW 5000
 
 /* 底盘旋转最大速度，单位是度每秒 */
-#define MAX_CHASSIS_VR_SPEED 8
+#define MAX_CHASSIS_VR_SPEED 6.5
 
 /******** SBUS底盘小陀螺相关设置 *******/
 /** 旋转速度=遥控器ch5值/功率限制比例 **/
@@ -232,28 +232,28 @@
 #define SBUS_FRICTION_AUTO_SPEED_H 7200
 
 /** DBUS遥控器发射速度 **/
-#define DBUS_FRICTION_LAUNCH_SPEED 6600
+#define DBUS_FRICTION_LAUNCH_SPEED 6200
 #define DBUS_SHOOT_REVERSE_SPEED 3000
 /** COUNTINUE模式参数 **/
 #define DBUS_FRICTION_AUTO_SPEED_L 3500
-#define DBUS_FRICTION_AUTO_SPEED_H 7000
+#define DBUS_FRICTION_AUTO_SPEED_H 5000
 /* -------------------------------- 发射电机PID参数 ------------------------------- */
 // TODO: 速度期望应改为变量应对速度切换。初次参数调整已完成
 /* 右摩擦轮M3508电机PID参数 */
 /* 速度环 */
-#define RIGHT_KP_V             24
-#define RIGHT_KI_V             0.1
-#define RIGHT_KD_V             0.001f
-#define RIGHT_INTEGRAL_V       50
-#define RIGHT_MAX_V            30000
+#define RIGHT_KP_V             30
+#define RIGHT_KI_V             0.0f
+#define RIGHT_KD_V             0.08f
+#define RIGHT_INTEGRAL_V       3
+#define RIGHT_MAX_V            16000
 
 /* 左摩擦轮M3508电机PID参数 */
 /* 速度环 */
-#define LEFT_KP_V           24
-#define LEFT_KI_V           0.1
-#define LEFT_KD_V           0.001f
-#define LEFT_INTEGRAL_V     50
-#define LEFT_MAX_V          30000
+#define LEFT_KP_V           30
+#define LEFT_KI_V           0.0f
+#define LEFT_KD_V           0.08f
+#define LEFT_INTEGRAL_V     3
+#define LEFT_MAX_V          16000
 
 // TODO：PID参数初次微调已完成，期待后续微调
 /* 拨弹电机M2006电机PID参数 */

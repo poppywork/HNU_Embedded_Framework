@@ -50,6 +50,7 @@ typedef struct
     kb_state_e shift_sta; //shift键按键状态
     kb_state_e ctrl_sta; //ctrl键按键状态
     kb_state_e v_sta; //ctrl键按键状态,应该是v键的按键状态？
+    kb_state_e b_sta;//B键初始化ui
 
     uint16_t lk_cnt;
     uint16_t rk_cnt;

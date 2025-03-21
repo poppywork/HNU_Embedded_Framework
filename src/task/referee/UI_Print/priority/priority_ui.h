@@ -17,6 +17,7 @@
 #include "string.h"
 #include "stdlib.h"
 #include "ui_protocol.h"
+#include "rm_task.h"
 
 
 /* Exported enum ------------------------------------------------------------*/
@@ -131,6 +132,6 @@ typedef struct Node_u
 
 /* Exported functions --------------------------------------------------------*/
 ui_status_e Init_Ui_List(ui_info_t *dynamic_ui_info, uint8_t dynamic_ui_num, ui_info_t *const_ui_info, uint8_t const_ui_num);
-void Ui_Send();
+void Ui_Send(struct ui_cmd_msg ui_cmd);
 ui_status_e Enqueue_Ui_For_Sending(ui_info_t *ui_info);
 #endif

@@ -15,7 +15,7 @@
 #define DBG_LVL DBG_INFO
 #include <rtdbg.h>
 
-static publisher_t *pub_gim, *pub_chassis, *pub_shoot;
+static publisher_t *pub_gim, *pub_chassis, *pub_shoot,*pub_ui;
 static subscriber_t *sub_gim, *sub_shoot,*sub_trans,*sub_ins,*sub_referee;
 static struct gimbal_cmd_msg gim_cmd;
 static struct gimbal_fdb_msg gim_fdb;
@@ -24,6 +24,7 @@ static struct shoot_fdb_msg  shoot_fdb;
 static struct chassis_cmd_msg chassis_cmd;
 static struct trans_fdb_msg  trans_fdb;
 static struct ins_msg ins_data;
+static struct ui_cmd_msg ui_cmd;
 static struct referee_msg referee_fdb;
 
 static rc_dbus_obj_t *rc_now, *rc_last;
@@ -61,6 +62,8 @@ static int key_e_status=-1;
 static int key_f_status=-1;
 static int key_q_status=-1;
 static int key_v_status=-1;
+
+static int rc_f_status=-1;
 
 /* ------------------------------- 遥控数据转换为控制指令 ------------------------------ */
 static void remote_to_cmd_dbus(void);
@@ -138,6 +141,7 @@ static void cmd_pub_init(void)
     pub_gim = pub_register("gim_cmd", sizeof(struct gimbal_cmd_msg));
     pub_chassis = pub_register("chassis_cmd", sizeof(struct chassis_cmd_msg));
     pub_shoot= pub_register("shoot_cmd", sizeof(struct shoot_cmd_msg));
+    pub_ui= pub_register("ui_cmd", sizeof(struct ui_cmd_msg));
 }
 
 /**
@@ -148,6 +152,7 @@ static void cmd_pub_push(void)
     pub_push_msg(pub_gim, &gim_cmd);
     pub_push_msg(pub_chassis, &chassis_cmd);
     pub_push_msg(pub_shoot, &shoot_cmd);
+    pub_push_msg(pub_ui, &ui_cmd);
 }
 
 /**
@@ -491,17 +496,30 @@ static void remote_to_cmd_pc_DT7(void)
         }
     }
 
-   /*TODO:小陀螺*/
 
+    /* -------------初始化ui按键B-----------------*/
+    if(km.b_sta == KEY_PRESS_DOWN){
+
+        ui_cmd.ui_init = 1;//B键被按下满足ui初始化条件
+
+    }else{
+
+        ui_cmd.ui_init = 0;
+
+    }
+
+
+    /*TODO:小陀螺*/
+    //开小陀螺
     if(km.e_sta==KEY_PRESS_ONCE)
     {
-        key_e_status=-key_e_status;
+        key_e_status=1;
     }
     if ( key_e_status==1||rc_now->sw1==RC_DN)
     {
         if (gim_fdb.back_mode==BACK_IS_OK)
         {
-         chassis_cmd.ctrl_mode=CHASSIS_SPIN;
+            chassis_cmd.ctrl_mode=CHASSIS_SPIN;
         }
         else
         {
@@ -509,24 +527,49 @@ static void remote_to_cmd_pc_DT7(void)
             gim_cmd.ctrl_mode=GIMBAL_INIT;
         }
     }
+    //关小陀螺
+    if(rc_now->kb.bit.Q == 1 )
+    {
+        key_e_status=0;
+    }
+    if ( key_e_status==0)
+    {
+        chassis_cmd.ctrl_mode = CHASSIS_FOLLOW_GIMBAL;
+    }
     if (chassis_cmd.ctrl_mode==CHASSIS_SPIN)
     {
         chassis_cmd.vw=ROTATE_INTERCEPT+ROTATE_MULTIPLIER*referee_fdb.robot_status.chassis_power_limit/ROTATE_LIMIT_RATIO;/*!小陀螺转速，随着功率限制提升加快转速*/
     }
     /*TODO:--------------------------------------------------发射模块状态机--------------------------------------------------------------*/
     /*!-----------------------------------------开关摩擦轮--------------------------------------------*/
-
     if(km.f_sta==KEY_PRESS_ONCE)
     {
-        key_f_status=-key_f_status;
+        key_f_status=1;
     }
-    if ( key_f_status==1||rc_now->sw1==RC_MI)
+    if(rc_now->sw1==RC_MI)
+    {
+        rc_f_status = 1;
+    }
+    if ( key_f_status==1||rc_f_status == 1)
     {
         shoot_cmd.friction_status=1;
     }
     else
     {
-        shoot_cmd.friction_status=0;
+        shoot_cmd.friction_status = 0;
+    }
+
+    //关摩擦轮
+    if(rc_now->kb.bit.G == 1)
+    {
+        key_f_status=0;
+    }
+    if(rc_now->sw1 != RC_MI)
+    {
+        if(rc_f_status == 1)
+        {
+            rc_f_status = 0;
+        }
     }
     /*!------------------------------------------------------------扳机连发模式---------------------------------------------------------*/
     if (km.v_sta==KEY_PRESS_ONCE)
@@ -607,7 +650,7 @@ static void remote_to_cmd_pc_DT7(void)
             {
                 shoot_cmd.shoot_freq=0;
             }
-        barrel_heat_limit();
+            barrel_heat_limit();
             break;
 
     }
@@ -673,7 +716,7 @@ static void barrel_heat_limit()
     if(referee_connect_status == CONNECTED && debug_barrel_limit_flag == 1 && shoot_cmd.shoot_freq !=0) {//需要进行限制
         delta_heat = referee_fdb.robot_status.shooter_barrel_heat_limit -
                         referee_fdb.power_heat_data.shooter_17mm_1_barrel_heat;
-        if(delta_heat< 100 && delta_heat >= 10)
+        if(delta_heat< 120 && delta_heat >= 10)
             shoot_cmd.shoot_freq = (delta_heat)/ 100.0f  * DBUS_FRICTION_AUTO_SPEED_H;
         else if(delta_heat <10) {
             shoot_cmd.shoot_freq = 0;
