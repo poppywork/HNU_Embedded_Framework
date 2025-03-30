@@ -10,130 +10,149 @@ void Spin_Rp_Ui(void);
 ui_info_t dynamic_ui_info [DYNAMIC_UI_NUM] =
         {
         [Frc] = {
-                /*²»±äÅäÖÃ*/
-                .ui_config.priority = HIGH_PRIORITY, // UIÓÅÏÈ¼¶(½ö¶¯Ì¬UIĞèÒªÅäÖÃ)
-                .ui_config.ui_type = CHAR, // UIÄÚÈİÀàĞÍ
-                /*¿É±äÅäÖÃ*/
-                .ui_config.operate_type = MODIFY, // ²Ù×÷ÀàĞÍ
-                .ui_config.layer = 0, // Í¼²ãÊı£¬0~9
-                .ui_config.color = FUCHSIA, // ÑÕÉ«
-                .ui_config.size = 35, // ×ÖÌå´óĞ¡
-                .ui_config.width = 3, // ÏßÌõ¿í¶È
-                .ui_config.start_x = 430, // Æğµã x ×ø±ê
-                .ui_config.start_y = 850, // Æğµã y ×ø±ê
+                /*ä¸å˜é…ç½®*/
+                .ui_config.priority = HIGH_PRIORITY, // UIä¼˜å…ˆçº§(ä»…åŠ¨æ€UIéœ€è¦é…ç½®)
+                .ui_config.ui_type = CHAR, // UIå†…å®¹ç±»å‹
+                /*å¯å˜é…ç½®*/
+                .ui_config.operate_type = MODIFY, // æ“ä½œç±»å‹
+                .ui_config.layer = 0, // å›¾å±‚æ•°ï¼Œ0~9
+                .ui_config.color = FUCHSIA, // é¢œè‰²
+                .ui_config.size = 35, // å­—ä½“å¤§å°
+                .ui_config.width = 3, // çº¿æ¡å®½åº¦
+                .ui_config.start_x = 430, // èµ·ç‚¹ x åæ ‡
+                .ui_config.start_y = 850, // èµ·ç‚¹ y åæ ‡
                 .ui_config.text = "Frc",
         },
         [Rot] = {
-                /*²»±äÅäÖÃ*/
-                .ui_config.priority = HIGH_PRIORITY, // UIÓÅÏÈ¼¶(½ö¶¯Ì¬UIĞèÒªÅäÖÃ)
-                .ui_config.ui_type = CHAR, // UIÄÚÈİÀàĞÍ
-                /*¿É±äÅäÖÃ*/
-                .ui_config.operate_type = MODIFY, // ²Ù×÷ÀàĞÍ
-                .ui_config.layer = 0, // Í¼²ãÊı£¬0~9
-                .ui_config.color = FUCHSIA, // ÑÕÉ«
-                .ui_config.size = 35, // ×ÖÌå´óĞ¡
-                .ui_config.width = 3, // ÏßÌõ¿í¶È
-                .ui_config.start_x = 430, // Æğµã x ×ø±ê
-                .ui_config.start_y = 775, // Æğµã y ×ø±ê
+                /*ä¸å˜é…ç½®*/
+                .ui_config.priority = HIGH_PRIORITY, // UIä¼˜å…ˆçº§(ä»…åŠ¨æ€UIéœ€è¦é…ç½®)
+                .ui_config.ui_type = CHAR, // UIå†…å®¹ç±»å‹
+                /*å¯å˜é…ç½®*/
+                .ui_config.operate_type = MODIFY, // æ“ä½œç±»å‹
+                .ui_config.layer = 0, // å›¾å±‚æ•°ï¼Œ0~9
+                .ui_config.color = FUCHSIA, // é¢œè‰²
+                .ui_config.size = 35, // å­—ä½“å¤§å°
+                .ui_config.width = 3, // çº¿æ¡å®½åº¦
+                .ui_config.start_x = 430, // èµ·ç‚¹ x åæ ‡
+                .ui_config.start_y = 775, // èµ·ç‚¹ y åæ ‡
                 .ui_config.text = "Rot",
         },
         [Aim] = {
-                /*²»±äÅäÖÃ*/
-                .ui_config.priority = HIGH_PRIORITY, // UIÓÅÏÈ¼¶(½ö¶¯Ì¬UIĞèÒªÅäÖÃ)
-                .ui_config.ui_type = CHAR, // UIÄÚÈİÀàĞÍ
-                /*¿É±äÅäÖÃ*/
-                .ui_config.operate_type = MODIFY, // ²Ù×÷ÀàĞÍ
-                .ui_config.layer = 0, // Í¼²ãÊı£¬0~9
-                .ui_config.color = FUCHSIA, // ÑÕÉ«
-                .ui_config.size = 35, // ×ÖÌå´óĞ¡
-                .ui_config.width = 3, // ÏßÌõ¿í¶È
-                .ui_config.start_x = 430, // Æğµã x ×ø±ê
-                .ui_config.start_y = 700, // Æğµã y ×ø±ê
+                /*ä¸å˜é…ç½®*/
+                .ui_config.priority = HIGH_PRIORITY, // UIä¼˜å…ˆçº§(ä»…åŠ¨æ€UIéœ€è¦é…ç½®)
+                .ui_config.ui_type = CHAR, // UIå†…å®¹ç±»å‹
+                /*å¯å˜é…ç½®*/
+                .ui_config.operate_type = MODIFY, // æ“ä½œç±»å‹
+                .ui_config.layer = 0, // å›¾å±‚æ•°ï¼Œ0~9
+                .ui_config.color = FUCHSIA, // é¢œè‰²
+                .ui_config.size = 35, // å­—ä½“å¤§å°
+                .ui_config.width = 3, // çº¿æ¡å®½åº¦
+                .ui_config.start_x = 430, // èµ·ç‚¹ x åæ ‡
+                .ui_config.start_y = 700, // èµ·ç‚¹ y åæ ‡
                 .ui_config.text = "Aim",
         },
         [Aim_Frame] = {
-                /*²»±äÅäÖÃ*/
-                .ui_config.priority = LOW_PRIORITY, // UIÓÅÏÈ¼¶(½ö¶¯Ì¬UIĞèÒªÅäÖÃ)
-                .ui_config.ui_type = CIRCLE, // UIÄÚÈİÀàĞÍ
-                /*¿É±äÅäÖÃ*/
-                .ui_config.operate_type = MODIFY, // ²Ù×÷ÀàĞÍ
-                .ui_config.layer = 1, // Í¼²ãÊı£¬0~9
-                .ui_config.color = RED_BLUE, // ÑÕÉ«
-                .ui_config.width = 5, // ÏßÌõ¿í¶È
-                .ui_config.start_x = 960, // Æğµã x ×ø±ê
-                .ui_config.start_y = 540, // Æğµã y ×ø±ê
+                /*ä¸å˜é…ç½®*/
+                .ui_config.priority = LOW_PRIORITY, // UIä¼˜å…ˆçº§(ä»…åŠ¨æ€UIéœ€è¦é…ç½®)
+                .ui_config.ui_type = CIRCLE, // UIå†…å®¹ç±»å‹
+                /*å¯å˜é…ç½®*/
+                .ui_config.operate_type = MODIFY, // æ“ä½œç±»å‹
+                .ui_config.layer = 1, // å›¾å±‚æ•°ï¼Œ0~9
+                .ui_config.color = RED_BLUE, // é¢œè‰²
+                .ui_config.width = 5, // çº¿æ¡å®½åº¦
+                .ui_config.start_x = 960, // èµ·ç‚¹ x åæ ‡
+                .ui_config.start_y = 540, // èµ·ç‚¹ y åæ ‡
                 .ui_config.radius = 250,
         },
         [Carline_L] = {
-                /*²»±äÅäÖÃ*/
-                .ui_config.priority = LOW_PRIORITY, // UIÓÅÏÈ¼¶(½ö¶¯Ì¬UIĞèÒªÅäÖÃ)
-                .ui_config.ui_type = LINE, // UIÄÚÈİÀàĞÍ
-                /*¿É±äÅäÖÃ*/
-                .ui_config.operate_type = MODIFY, // ²Ù×÷ÀàĞÍ
-                .ui_config.layer = 1, // Í¼²ãÊı£¬0~9
-                .ui_config.color = ORANGE, // ÑÕÉ«
-                .ui_config.width = 5, // ÏßÌõ¿í¶È
-                .ui_config.start_x = 529, // Æğµã x ×ø±ê
-                .ui_config.start_y = 102, // Æğµã y ×ø±ê
+                /*ä¸å˜é…ç½®*/
+                .ui_config.priority = LOW_PRIORITY, // UIä¼˜å…ˆçº§(ä»…åŠ¨æ€UIéœ€è¦é…ç½®)
+                .ui_config.ui_type = LINE, // UIå†…å®¹ç±»å‹
+                /*å¯å˜é…ç½®*/
+                .ui_config.operate_type = MODIFY, // æ“ä½œç±»å‹
+                .ui_config.layer = 1, // å›¾å±‚æ•°ï¼Œ0~9
+                .ui_config.color = ORANGE, // é¢œè‰²
+                .ui_config.width = 5, // çº¿æ¡å®½åº¦
+                .ui_config.start_x = 529, // èµ·ç‚¹ x åæ ‡
+                .ui_config.start_y = 102, // èµ·ç‚¹ y åæ ‡
                 .ui_config.end_x = 783,
                 .ui_config.end_y = 445,
         },
         [Carline_R] = {
-                /*²»±äÅäÖÃ*/
-                .ui_config.priority = LOW_PRIORITY, // UIÓÅÏÈ¼¶(½ö¶¯Ì¬UIĞèÒªÅäÖÃ)
-                .ui_config.ui_type = LINE, // UIÄÚÈİÀàĞÍ
-                /*¿É±äÅäÖÃ*/
-                .ui_config.operate_type = MODIFY, // ²Ù×÷ÀàĞÍ
-                .ui_config.layer = 1, // Í¼²ãÊı£¬0~9
-                .ui_config.color = ORANGE, // ÑÕÉ«
-                .ui_config.width = 5, // ÏßÌõ¿í¶È
-                .ui_config.start_x = 1391, // Æğµã x ×ø±ê
-                .ui_config.start_y = 102, // Æğµã y ×ø±ê
+                /*ä¸å˜é…ç½®*/
+                .ui_config.priority = LOW_PRIORITY, // UIä¼˜å…ˆçº§(ä»…åŠ¨æ€UIéœ€è¦é…ç½®)
+                .ui_config.ui_type = LINE, // UIå†…å®¹ç±»å‹
+                /*å¯å˜é…ç½®*/
+                .ui_config.operate_type = MODIFY, // æ“ä½œç±»å‹
+                .ui_config.layer = 1, // å›¾å±‚æ•°ï¼Œ0~9
+                .ui_config.color = ORANGE, // é¢œè‰²
+                .ui_config.width = 5, // çº¿æ¡å®½åº¦
+                .ui_config.start_x = 1391, // èµ·ç‚¹ x åæ ‡
+                .ui_config.start_y = 102, // èµ·ç‚¹ y åæ ‡
                 .ui_config.end_x = 1137,
                 .ui_config.end_y = 445,
         },
         [Cross_H] = {
-                /*²»±äÅäÖÃ*/
-                .ui_config.priority = LOW_PRIORITY, // UIÓÅÏÈ¼¶(½ö¶¯Ì¬UIĞèÒªÅäÖÃ)
-                .ui_config.ui_type = LINE, // UIÄÚÈİÀàĞÍ
-                /*¿É±äÅäÖÃ*/
-                .ui_config.operate_type = MODIFY, // ²Ù×÷ÀàĞÍ
-                .ui_config.layer = 1, // Í¼²ãÊı£¬0~9
-                .ui_config.color = CYAN_BLUE, // ÑÕÉ«
-                .ui_config.width = 8, // ÏßÌõ¿í¶È
-                .ui_config.start_x = 935, // Æğµã x ×ø±ê
-                .ui_config.start_y = 540, // Æğµã y ×ø±ê
+                /*ä¸å˜é…ç½®*/
+                .ui_config.priority = LOW_PRIORITY, // UIä¼˜å…ˆçº§(ä»…åŠ¨æ€UIéœ€è¦é…ç½®)
+                .ui_config.ui_type = LINE, // UIå†…å®¹ç±»å‹
+                /*å¯å˜é…ç½®*/
+                .ui_config.operate_type = MODIFY, // æ“ä½œç±»å‹
+                .ui_config.layer = 1, // å›¾å±‚æ•°ï¼Œ0~9
+                .ui_config.color = CYAN_BLUE, // é¢œè‰²
+
+                .ui_config.width = 2, // çº¿æ¡å®½åº¦
+
+                .ui_config.start_x = 935, // èµ·ç‚¹ x åæ ‡
+                .ui_config.start_y = 540, // èµ·ç‚¹ y åæ ‡
                 .ui_config.end_x = 985,
                 .ui_config.end_y = 540,
         },
         [Cross_V] = {
-                /*²»±äÅäÖÃ*/
-                .ui_config.priority = LOW_PRIORITY, // UIÓÅÏÈ¼¶(½ö¶¯Ì¬UIĞèÒªÅäÖÃ)
-                .ui_config.ui_type = LINE, // UIÄÚÈİÀàĞÍ
-                /*¿É±äÅäÖÃ*/
-                .ui_config.operate_type = MODIFY, // ²Ù×÷ÀàĞÍ
-                .ui_config.layer = 1, // Í¼²ãÊı£¬0~9
-                .ui_config.color = CYAN_BLUE, // ÑÕÉ«
-                .ui_config.width = 8, // ÏßÌõ¿í¶È
-                .ui_config.start_x = 960, // Æğµã x ×ø±ê
-                .ui_config.start_y = 570, // Æğµã y ×ø±ê
+                /*ä¸å˜é…ç½®*/
+                .ui_config.priority = LOW_PRIORITY, // UIä¼˜å…ˆçº§(ä»…åŠ¨æ€UIéœ€è¦é…ç½®)
+                .ui_config.ui_type = LINE, // UIå†…å®¹ç±»å‹
+                /*å¯å˜é…ç½®*/
+                .ui_config.operate_type = MODIFY, // æ“ä½œç±»å‹
+                .ui_config.layer = 1, // å›¾å±‚æ•°ï¼Œ0~9
+                .ui_config.color = CYAN_BLUE, // é¢œè‰²
+
+                .ui_config.width = 2, // çº¿æ¡å®½åº¦
+
+                .ui_config.start_x = 960, // èµ·ç‚¹ x åæ ‡
+                .ui_config.start_y = 570, // èµ·ç‚¹ y åæ ‡
                 .ui_config.end_x = 960,
                 .ui_config.end_y = 180,
         },
         [Heat_Indicator] = {
-                /*²»±äÅäÖÃ*/
-                .ui_config.priority = HIGH_PRIORITY, // UIÓÅÏÈ¼¶(½ö¶¯Ì¬UIĞèÒªÅäÖÃ)
-                .ui_config.ui_type = CHAR, // UIÄÚÈİÀàĞÍ
-                /*¿É±äÅäÖÃ*/
-                .ui_config.operate_type = MODIFY, // ²Ù×÷ÀàĞÍ
-                .ui_config.layer = 0, // Í¼²ãÊı£¬0~9
-                .ui_config.color = GREEN, // ÑÕÉ«
-                .ui_config.size = 30, // ×ÖÌå´óĞ¡
-                .ui_config.width = 3, // ÏßÌõ¿í¶È
-                .ui_config.start_x = 1320, // Æğµã x ×ø±ê
-                .ui_config.start_y = 720, // Æğµã y ×ø±ê
+                /*ä¸å˜é…ç½®*/
+                .ui_config.priority = HIGH_PRIORITY, // UIä¼˜å…ˆçº§(ä»…åŠ¨æ€UIéœ€è¦é…ç½®)
+                .ui_config.ui_type = CHAR, // UIå†…å®¹ç±»å‹
+                /*å¯å˜é…ç½®*/
+                .ui_config.operate_type = MODIFY, // æ“ä½œç±»å‹
+                .ui_config.layer = 0, // å›¾å±‚æ•°ï¼Œ0~9
+                .ui_config.color = GREEN, // é¢œè‰²
+                .ui_config.size = 30, // å­—ä½“å¤§å°
+                .ui_config.width = 3, // çº¿æ¡å®½åº¦
+                .ui_config.start_x = 1320, // èµ·ç‚¹ x åæ ‡
+                .ui_config.start_y = 720, // èµ·ç‚¹ y åæ ‡
                 .ui_config.text = "HEAT",
         },
+
+        [Aim_Point] = {
+                /*ä¸å˜é…ç½®*/
+                .ui_config.priority = LOW_PRIORITY, // UIä¼˜å…ˆçº§(ä»…åŠ¨æ€UIéœ€è¦é…ç½®)
+                .ui_config.ui_type = CIRCLE, // UIå†…å®¹ç±»å‹
+                /*å¯å˜é…ç½®*/
+                .ui_config.operate_type = MODIFY, // æ“ä½œç±»å‹
+                .ui_config.layer = 3, // å›¾å±‚æ•°ï¼Œ0~9
+                .ui_config.color = ORANGE, // é¢œè‰²
+                .ui_config.width = 2, // çº¿æ¡å®½åº¦
+                .ui_config.start_x = 960, // èµ·ç‚¹ x åæ ‡
+                .ui_config.start_y = 510, // èµ·ç‚¹ y åæ ‡
+                .ui_config.radius = 5,
+        },
+
 
 
 
@@ -146,7 +165,7 @@ ui_info_t const_ui_info [0] =
 
 
 /**
-  @brief: ³õÊ¼»¯UIÁ´±í main.cÖĞµ÷ÓÃ
+  @brief: åˆå§‹åŒ–UIé“¾è¡¨ main.cä¸­è°ƒç”¨
  */
 void My_Ui_Init(void)
 {

@@ -100,7 +100,7 @@
 #define MAX_CHASSIS_VY_SPEED_LOW 5000
 
 /* 底盘旋转最大速度，单位是度每秒 */
-#define MAX_CHASSIS_VR_SPEED 8
+#define MAX_CHASSIS_VR_SPEED 7.0
 
 /******** SBUS底盘小陀螺相关设置 *******/
 /** 旋转速度=遥控器ch5值/功率限制比例 **/
@@ -168,9 +168,9 @@
 #define YAW_INTEGRAL_V_IMU       0
 #define YAW_MAX_V_IMU            30000
 /* imu角度环 */
-#define YAW_KP_A_IMU             0.35f
+#define YAW_KP_A_IMU             0.14f
 #define YAW_KI_A_IMU             0
-#define YAW_KD_A_IMU             0.001f
+#define YAW_KD_A_IMU             0.006f
 #define YAW_INTEGRAL_A_IMU       0
 #define YAW_MAX_A_IMU            25
 /* auto速度环 */
@@ -180,9 +180,9 @@
 #define YAW_INTEGRAL_V_AUTO      0
 #define YAW_MAX_V_AUTO           30000
 /* auto角度环 */
-#define YAW_KP_A_AUTO            0.35f
+#define YAW_KP_A_AUTO            0.16f
 #define YAW_KI_A_AUTO            0
-#define YAW_KD_A_AUTO            0.001f
+#define YAW_KD_A_AUTO            0.008f
 #define YAW_INTEGRAL_A_AUTO      0
 #define YAW_MAX_A_AUTO           25
 
@@ -195,9 +195,9 @@
 #define PITCH_MAX_V_IMU          30000
 
 /* imu角度环 */
-#define PITCH_KP_A_IMU           0.35f
+#define PITCH_KP_A_IMU           0.65f
 #define PITCH_KI_A_IMU           0.0f
-#define PITCH_KD_A_IMU           0.0001f
+#define PITCH_KD_A_IMU           0.00015f
 #define PITCH_INTEGRAL_A_IMU     0.0f
 #define PITCH_MAX_A_IMU          20
 
@@ -208,7 +208,7 @@
 #define PITCH_INTEGRAL_V_AUTO    1500
 #define PITCH_MAX_V_AUTO         30000
 /* auto角度环 */
-#define PITCH_KP_A_AUTO          0.35f
+#define PITCH_KP_A_AUTO          0.6f
 #define PITCH_KI_A_AUTO          0.0f
 #define PITCH_KD_A_AUTO          0.001f
 #define PITCH_INTEGRAL_A_AUTO    0.0f
@@ -232,28 +232,28 @@
 #define SBUS_FRICTION_AUTO_SPEED_H 7200
 
 /** DBUS遥控器发射速度 **/
-#define DBUS_FRICTION_LAUNCH_SPEED 6600
+#define DBUS_FRICTION_LAUNCH_SPEED 6200
 #define DBUS_SHOOT_REVERSE_SPEED 3000
 /** COUNTINUE模式参数 **/
 #define DBUS_FRICTION_AUTO_SPEED_L 3500
-#define DBUS_FRICTION_AUTO_SPEED_H 7000
+#define DBUS_FRICTION_AUTO_SPEED_H 5000
 /* -------------------------------- 发射电机PID参数 ------------------------------- */
 // TODO: 速度期望应改为变量应对速度切换。初次参数调整已完成
 /* 右摩擦轮M3508电机PID参数 */
 /* 速度环 */
-#define RIGHT_KP_V             24
-#define RIGHT_KI_V             0.1
-#define RIGHT_KD_V             0.001f
-#define RIGHT_INTEGRAL_V       50
-#define RIGHT_MAX_V            30000
+#define RIGHT_KP_V             30
+#define RIGHT_KI_V             0.0f
+#define RIGHT_KD_V             0.08f
+#define RIGHT_INTEGRAL_V       3
+#define RIGHT_MAX_V            16000
 
 /* 左摩擦轮M3508电机PID参数 */
 /* 速度环 */
-#define LEFT_KP_V           24
-#define LEFT_KI_V           0.1
-#define LEFT_KD_V           0.001f
-#define LEFT_INTEGRAL_V     50
-#define LEFT_MAX_V          30000
+#define LEFT_KP_V           30
+#define LEFT_KI_V           0.0f
+#define LEFT_KD_V           0.08f
+#define LEFT_INTEGRAL_V     3
+#define LEFT_MAX_V          16000
 
 // TODO：PID参数初次微调已完成，期待后续微调
 /* 拨弹电机M2006电机PID参数 */

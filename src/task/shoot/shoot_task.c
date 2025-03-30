@@ -112,7 +112,7 @@ void shoot_task_entry(void* argument)
         if (shoot_cmd.cover_open == 1)
             rt_pwm_set(servo_cover_dev, PWM_COVER_CH, 20000000, 2000000);
         else
-            rt_pwm_set(servo_cover_dev, PWM_COVER_CH, 20000000, 750000);
+            rt_pwm_set(servo_cover_dev, PWM_COVER_CH, 20000000, 800000);
 
         /* 电机控制启动 */
         for (uint8_t i = 0; i < SHT_MOTOR_NUM; i++)

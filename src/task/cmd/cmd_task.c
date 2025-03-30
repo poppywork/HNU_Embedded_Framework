@@ -25,6 +25,7 @@ static struct chassis_cmd_msg chassis_cmd;
 static struct trans_fdb_msg  trans_fdb;
 static struct ui_cmd_msg ui_cmd;
 static struct ins_msg ins_data;
+static struct ui_cmd_msg ui_cmd;
 static struct referee_msg referee_fdb;
 
 static rc_dbus_obj_t *rc_now, *rc_last;
@@ -62,6 +63,8 @@ static int key_e_status=-1;
 static int key_f_status=-1;
 static int key_q_status=-1;
 static int key_v_status=-1;
+
+static int rc_f_status=-1;
 
 /* ------------------------------- 遥控数据转换为控制指令 ------------------------------ */
 static void remote_to_cmd_dbus(void);
@@ -163,7 +166,8 @@ static void cmd_sub_init(void)
     sub_shoot= sub_register("shoot_fdb", sizeof(struct shoot_fdb_msg));
     sub_trans= sub_register("trans_fdb", sizeof(struct trans_fdb_msg));
     sub_ins = sub_register("ins_msg", sizeof(struct ins_msg));
-//    sub_referee= sub_register("referee_fdb",sizeof(struct referee_msg));
+    sub_referee= sub_register("referee_fdb",sizeof(struct referee_msg));
+
 }
 
 
@@ -176,8 +180,8 @@ static void cmd_sub_pull(void)
     sub_get_msg(sub_shoot, &shoot_fdb);
     sub_get_msg(sub_trans,&trans_fdb);
     sub_get_msg(sub_ins, &ins_data);
-    // sub_get_msg(sub_referee, &referee_fdb);
-    referee_fdb = *get_power_limit();
+    sub_get_msg(sub_referee, &referee_fdb);
+//    referee_fdb = *get_power_limit();
 }
 
 /* ------------------------------ 将遥控器数据转换为控制指令 ----------------------------- */
@@ -216,7 +220,7 @@ static void remote_to_cmd_sbus(void)
     {
         gim_cmd.yaw += rc_now->ch3 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_YAW -fx * KB_RATIO * GIMBAL_PC_MOVE_RATIO_YAW;
         gim_cmd.pitch += rc_now->ch4 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_PIT - fy * KB_RATIO * GIMBAL_PC_MOVE_RATIO_PIT;
-        gyro_yaw_inherit =gim_cmd.yaw;
+        gyro_yaw_inherit = ins_data.yaw_total_angle - gim_fdb.yaw_offset_angle_total /*gim_cmd.yaw*/;
         gyro_pitch_inherit =ins_data.pitch;
 
     }
@@ -495,6 +499,7 @@ static void remote_to_cmd_pc_DT7(void)
         }
     }
 
+
     /* -------------初始化ui按键B-----------------*/
     if(km.b_sta == KEY_PRESS_DOWN){
 
@@ -509,15 +514,30 @@ static void remote_to_cmd_pc_DT7(void)
 
    /*TODO:小陀螺*/
 
+
+    /* -------------初始化ui按键B-----------------*/
+    if(km.b_sta == KEY_PRESS_DOWN){
+
+        ui_cmd.ui_init = 1;//B键被按下满足ui初始化条件
+
+    }else{
+
+        ui_cmd.ui_init = 0;
+
+    }
+
+
+    /*TODO:小陀螺*/
+    //开小陀螺
     if(km.e_sta==KEY_PRESS_ONCE)
     {
-        key_e_status=-key_e_status;
+        key_e_status=1;
     }
     if ( key_e_status==1||rc_now->sw1==RC_DN)
     {
         if (gim_fdb.back_mode==BACK_IS_OK)
         {
-         chassis_cmd.ctrl_mode=CHASSIS_SPIN;
+            chassis_cmd.ctrl_mode=CHASSIS_SPIN;
         }
         else
         {
@@ -525,24 +545,49 @@ static void remote_to_cmd_pc_DT7(void)
             gim_cmd.ctrl_mode=GIMBAL_INIT;
         }
     }
+    //关小陀螺
+    if(rc_now->kb.bit.Q == 1 )
+    {
+        key_e_status=0;
+    }
+    if ( key_e_status==0)
+    {
+        chassis_cmd.ctrl_mode = CHASSIS_FOLLOW_GIMBAL;
+    }
     if (chassis_cmd.ctrl_mode==CHASSIS_SPIN)
     {
         chassis_cmd.vw=ROTATE_INTERCEPT+ROTATE_MULTIPLIER*referee_fdb.robot_status.chassis_power_limit/ROTATE_LIMIT_RATIO;/*!小陀螺转速，随着功率限制提升加快转速*/
     }
     /*TODO:--------------------------------------------------发射模块状态机--------------------------------------------------------------*/
     /*!-----------------------------------------开关摩擦轮--------------------------------------------*/
-
     if(km.f_sta==KEY_PRESS_ONCE)
     {
-        key_f_status=-key_f_status;
+        key_f_status=1;
     }
-    if ( key_f_status==1||rc_now->sw1==RC_MI)
+    if(rc_now->sw1==RC_MI)
+    {
+        rc_f_status = 1;
+    }
+    if ( key_f_status==1||rc_f_status == 1)
     {
         shoot_cmd.friction_status=1;
     }
     else
     {
-        shoot_cmd.friction_status=0;
+        shoot_cmd.friction_status = 0;
+    }
+
+    //关摩擦轮
+    if(rc_now->kb.bit.G == 1)
+    {
+        key_f_status=0;
+    }
+    if(rc_now->sw1 != RC_MI)
+    {
+        if(rc_f_status == 1)
+        {
+            rc_f_status = 0;
+        }
     }
     /*!------------------------------------------------------------扳机连发模式---------------------------------------------------------*/
     if (km.v_sta==KEY_PRESS_ONCE)
@@ -623,7 +668,7 @@ static void remote_to_cmd_pc_DT7(void)
             {
                 shoot_cmd.shoot_freq=0;
             }
-        barrel_heat_limit();
+            barrel_heat_limit();
             break;
 
     }
@@ -689,7 +734,7 @@ static void barrel_heat_limit()
     if(referee_connect_status == CONNECTED && debug_barrel_limit_flag == 1 && shoot_cmd.shoot_freq !=0) {//需要进行限制
         delta_heat = referee_fdb.robot_status.shooter_barrel_heat_limit -
                         referee_fdb.power_heat_data.shooter_17mm_1_barrel_heat;
-        if(delta_heat< 100 && delta_heat >= 10)
+        if(delta_heat< 120 && delta_heat >= 10)
             shoot_cmd.shoot_freq = (delta_heat)/ 100.0f  * DBUS_FRICTION_AUTO_SPEED_H;
         else if(delta_heat <10) {
             shoot_cmd.shoot_freq = 0;
