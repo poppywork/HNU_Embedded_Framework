@@ -14,7 +14,9 @@ typedef enum{
     Aim_Frame,
     Carline_L,
     Carline_R,
+
     Aim_Point,
+
 	
 	DYNAMIC_UI_NUM,
 }dynamic_ui_cnt_e;

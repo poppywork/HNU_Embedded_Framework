@@ -23,7 +23,7 @@
 #define HIGH_CHAR_PRIORITY_LEVEL 7  // 高优先级字符抢占图形UI的等级
 #define MID_CHAR_PRIORITY_LEVEL  5  // 中优先级字符抢占图形UI的等级
 
-#define SEND_INTERVAL        100 // 发送间隔时间(MS) [裁判系统上限是10HZ]
+#define SEND_INTERVAL        40 // 发送间隔时间(MS) [裁判系统上限是10HZ]
 #define PER_INIT_UI_TIMES    1   // 每次初始化的UI次数
 
 uint8_t send_test = 1;
