@@ -134,6 +134,19 @@ ui_info_t dynamic_ui_info [DYNAMIC_UI_NUM] =
                 .ui_config.start_y = 720, // 起点 y 坐标
                 .ui_config.text = "HEAT",
         },
+        [Aim_Point] = {
+                /*不变配置*/
+                .ui_config.priority = LOW_PRIORITY, // UI优先级(仅动态UI需要配置)
+                .ui_config.ui_type = CIRCLE, // UI内容类型
+                /*可变配置*/
+                .ui_config.operate_type = MODIFY, // 操作类型
+                .ui_config.layer = 3, // 图层数，0~9
+                .ui_config.color = ORANGE, // 颜色
+                .ui_config.width = 2, // 线条宽度
+                .ui_config.start_x = 960, // 起点 x 坐标
+                .ui_config.start_y = 510, // 起点 y 坐标
+                .ui_config.radius = 5,
+        },
 
 
 

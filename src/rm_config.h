@@ -100,7 +100,7 @@
 #define MAX_CHASSIS_VY_SPEED_LOW 5000
 
 /* 底盘旋转最大速度，单位是度每秒 */
-#define MAX_CHASSIS_VR_SPEED 6.5
+#define MAX_CHASSIS_VR_SPEED 7.0
 
 /******** SBUS底盘小陀螺相关设置 *******/
 /** 旋转速度=遥控器ch5值/功率限制比例 **/
@@ -168,9 +168,9 @@
 #define YAW_INTEGRAL_V_IMU       0
 #define YAW_MAX_V_IMU            30000
 /* imu角度环 */
-#define YAW_KP_A_IMU             0.35f
+#define YAW_KP_A_IMU             0.14f
 #define YAW_KI_A_IMU             0
-#define YAW_KD_A_IMU             0.001f
+#define YAW_KD_A_IMU             0.006f
 #define YAW_INTEGRAL_A_IMU       0
 #define YAW_MAX_A_IMU            25
 /* auto速度环 */
@@ -180,9 +180,9 @@
 #define YAW_INTEGRAL_V_AUTO      0
 #define YAW_MAX_V_AUTO           30000
 /* auto角度环 */
-#define YAW_KP_A_AUTO            0.35f
+#define YAW_KP_A_AUTO            0.16f
 #define YAW_KI_A_AUTO            0
-#define YAW_KD_A_AUTO            0.001f
+#define YAW_KD_A_AUTO            0.008f
 #define YAW_INTEGRAL_A_AUTO      0
 #define YAW_MAX_A_AUTO           25
 
@@ -195,9 +195,9 @@
 #define PITCH_MAX_V_IMU          30000
 
 /* imu角度环 */
-#define PITCH_KP_A_IMU           0.35f
+#define PITCH_KP_A_IMU           0.65f
 #define PITCH_KI_A_IMU           0.0f
-#define PITCH_KD_A_IMU           0.0001f
+#define PITCH_KD_A_IMU           0.00015f
 #define PITCH_INTEGRAL_A_IMU     0.0f
 #define PITCH_MAX_A_IMU          20
 
@@ -208,7 +208,7 @@
 #define PITCH_INTEGRAL_V_AUTO    1500
 #define PITCH_MAX_V_AUTO         30000
 /* auto角度环 */
-#define PITCH_KP_A_AUTO          0.35f
+#define PITCH_KP_A_AUTO          0.6f
 #define PITCH_KI_A_AUTO          0.0f
 #define PITCH_KD_A_AUTO          0.001f
 #define PITCH_INTEGRAL_A_AUTO    0.0f

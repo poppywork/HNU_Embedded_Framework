@@ -306,7 +306,7 @@ void dji_motor_control()
                             power_limit_out =60;
                         }
                         //底盘功率限制单位转换
-                        if (power_all > (power_limit_out + 20 *msg->power_heat_data.buffer_energy/power_limit_out)) {
+                        if (power_all > (power_limit_out + 5 *msg->power_heat_data.buffer_energy/power_limit_out)) {
                             k_zoom = (float)power_limit_out / power_all;
                             for (int j = 0; j < 4; ++j)
                             {

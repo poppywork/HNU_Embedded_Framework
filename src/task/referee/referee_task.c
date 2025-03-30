@@ -64,7 +64,7 @@ static custom_client_data_t                    custom_client_data;
 
 
 /* -------------------------------- 线程间通讯话题相关 ------------------------------- */
-static publisher_t *pub_refree;
+static publisher_t *pub_referee;
 static subscriber_t *sub_gim,*sub_chassis,*sub_shoot,*sub_ui;
 static struct gimbal_cmd_msg gim_cmd;
 static struct referee_msg referee_data;
@@ -101,7 +101,7 @@ static void refree_sub_pull(void)
  */
 static void refree_pub_init(void)
 {
-    pub_refree = pub_register("referee_fdb",sizeof(struct referee_msg));
+    pub_referee = pub_register("referee_fdb",sizeof(struct referee_msg));
 }
 
 /**
@@ -109,7 +109,7 @@ static void refree_pub_init(void)
  */
 static void refree_pub_push(void)
 {
-    pub_push_msg(pub_refree,&referee_data);
+    pub_push_msg(pub_referee,&referee_data);
 }
 
 /*裁判系统线程入口*/
@@ -352,7 +352,7 @@ void Referee_Data_Unpack()
 }
 
 
-
+//在rtt中先会进DMA2_Stream6_IRQHandler,要在内部引用HAL_DMA_IRQHandler(&hdma_usart6_tx)才会跳转到hal库中断,否则会卡死
 void DMA2_Stream6_IRQHandler(void) {
     HAL_DMA_IRQHandler(&hdma_usart6_tx);
 }
@@ -504,7 +504,7 @@ void Referee_Data_Solve(uint8_t* frame)
     }
 }
 
-struct referee_msg *get_power_limit()
+struct referee_msg *get_power_limit()//记录地址,给module层的motor,得到当前应该限制的功率,订阅不方便故采用指针
 {
     return &referee_data; // 返回结构体指针
 }

@@ -164,7 +164,7 @@ static void cmd_sub_init(void)
     sub_shoot= sub_register("shoot_fdb", sizeof(struct shoot_fdb_msg));
     sub_trans= sub_register("trans_fdb", sizeof(struct trans_fdb_msg));
     sub_ins = sub_register("ins_msg", sizeof(struct ins_msg));
-    sub_referee= sub_register("refree_fdb",sizeof(struct referee_msg));
+    sub_referee= sub_register("referee_fdb",sizeof(struct referee_msg));
 }
 
 
@@ -177,8 +177,8 @@ static void cmd_sub_pull(void)
     sub_get_msg(sub_shoot, &shoot_fdb);
     sub_get_msg(sub_trans,&trans_fdb);
     sub_get_msg(sub_ins, &ins_data);
-    // sub_get_msg(sub_referee, &referee_fdb);
-    referee_fdb = *get_power_limit();
+    sub_get_msg(sub_referee, &referee_fdb);
+//    referee_fdb = *get_power_limit();
 }
 
 /* ------------------------------ 将遥控器数据转换为控制指令 ----------------------------- */
@@ -217,7 +217,7 @@ static void remote_to_cmd_sbus(void)
     {
         gim_cmd.yaw += rc_now->ch3 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_YAW -fx * KB_RATIO * GIMBAL_PC_MOVE_RATIO_YAW;
         gim_cmd.pitch += rc_now->ch4 * RC_RATIO * GIMBAL_RC_MOVE_RATIO_PIT - fy * KB_RATIO * GIMBAL_PC_MOVE_RATIO_PIT;
-        gyro_yaw_inherit =gim_cmd.yaw;
+        gyro_yaw_inherit = ins_data.yaw_total_angle - gim_fdb.yaw_offset_angle_total /*gim_cmd.yaw*/;
         gyro_pitch_inherit =ins_data.pitch;
 
     }
