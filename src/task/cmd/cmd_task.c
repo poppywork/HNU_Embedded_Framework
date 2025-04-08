@@ -650,7 +650,7 @@ static void remote_to_cmd_pc_DT7(void)
             {
                 shoot_cmd.shoot_freq=0;
             }
-            barrel_heat_limit();
+//            barrel_heat_limit();
             break;
 
     }
