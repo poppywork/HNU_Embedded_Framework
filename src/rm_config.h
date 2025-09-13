@@ -148,7 +148,7 @@
 #endif
 
 /* 云台pitch轴编码器归中值 */
-#define CENTER_ECD_PITCH 3532
+#define CENTER_ECD_PITCH   3532
 /* pitch轴最大仰角 */
 #define PIT_ANGLE_MAX    30.0f
 /* pitch轴最大俯角 */
@@ -232,7 +232,7 @@
 #define SBUS_FRICTION_AUTO_SPEED_H 7200
 
 /** DBUS遥控器发射速度 **/
-#define DBUS_FRICTION_LAUNCH_SPEED 2000
+#define DBUS_FRICTION_LAUNCH_SPEED 2600
 #define DBUS_SHOOT_REVERSE_SPEED 3000
 /** COUNTINUE模式参数 **/
 #define DBUS_FRICTION_AUTO_SPEED_L 3500

@@ -371,7 +371,7 @@
 #define BSP_USING_BMI088
 #define BSP_USING_RC_DBUS
 #define BSP_USING_RC_KEYBOARD
-#define BSP_USING_REFEREE
+#define BSP_USING_LOG
 /* end of RoboMaster Modules */
 
 /* RoboMaster Algorithms */

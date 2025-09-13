@@ -51,5 +51,9 @@
 #ifdef BSP_USING_LEG
 #include "drv_leg.h"
 #endif /* BSP_USING_LEG */
-
+#ifdef BSP_USING_LOG
+#include "SEGGER_RTT.h"
+#include "SEGGER_RTT_Conf.h"
+#include "bsp_log.h"
+#endif /* BSP_USING_RC_DBUS */
 #endif /* _RM_MODULE_H */

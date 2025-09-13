@@ -55,6 +55,18 @@ if GetDepend(['BSP_USING_LEG']):
     src += Glob(cwd + '/leg/*.c')
     path += [cwd + '/leg']
 
+if GetDepend(['BSP_USING_LOG']):
+    src += Glob(cwd + '/rtt_log/*.c')
+    path += [cwd + '/rtt_log']
+    src += Glob(cwd + '/rtt_log/log/*.c')
+    path += [cwd + '/rtt_log/log']
+    src += Glob(cwd + '/rtt_log/SEGGER/*.c')
+    path += [cwd + '/rtt_log/SEGGER']
+    src += Glob(cwd + '/rtt_log/SEGGER/Config/*.h')
+    path += [cwd + '/rtt_log/SEGGER/Config']
+    src += Glob(cwd + '/rtt_log/SEGGER/RTT/*.c')
+    path += [cwd + '/rtt_log/SEGGER/RTT']
+
 
 src  += [cwd + '/usr_callback.c']
 

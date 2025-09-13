@@ -244,6 +244,8 @@ void shoot_task_entry(void* argument)
         {
         case SHOOT_STOP:
             shoot_motor_ref[TRIGGER_MOTOR] = 0;
+            shoot_motor_ref[RIGHT_FRICTION] =0;
+            shoot_motor_ref[LEFT_FRICTION] = 0;
             total_angle_flag=SHOOT_ANGLE_CONTINUE;
             break;
 

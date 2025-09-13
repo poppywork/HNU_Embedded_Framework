@@ -395,6 +395,7 @@ void USART6_IRQHandler(void)
     {
         __HAL_DMA_CLEAR_FLAG(&hdma_usart6_tx, DMA_FLAG_TCIF2_6); //清除DMA2_Steam7传输完成标志
         __HAL_DMA_DISABLE(&hdma_usart6_tx);		//传输完成以后关闭串口DMA,缺了这一句会死机
+
     }
     HAL_UART_IRQHandler(&huart6);
 }

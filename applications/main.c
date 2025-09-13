@@ -28,6 +28,7 @@ int main(void)
     rt_pin_mode(GET_PIN(C, 8), PIN_MODE_OUTPUT);
     dwt_init(CPU_FREQUENCY);
     rt_pin_write(GET_PIN(C, 8), PIN_HIGH);
+    SEGGER_RTT_Init();//系统日志log初始化
 
     while (count++)
     {
