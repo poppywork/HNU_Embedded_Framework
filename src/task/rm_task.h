@@ -75,14 +75,7 @@ struct chassis_cmd_msg
 };
 
 
-/**
- * @brief cmd发布的ui控制数据,由referee订阅
- */
- struct ui_cmd_msg{//需要发布ui初始化信息
 
-     float ui_init;
-
- };
 
 
 /**

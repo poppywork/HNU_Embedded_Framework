@@ -361,9 +361,6 @@ void DMA2_Stream6_IRQHandler(void) {
     HAL_DMA_IRQHandler(&hdma_usart6_tx);
 }
 
-void DMA2_Stream6_IRQHandler(void) {
-    HAL_DMA_IRQHandler(&hdma_usart6_tx);
-}
 
 /*!串口接收*/
 void USART6_IRQHandler(void)
