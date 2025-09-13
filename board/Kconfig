@@ -361,8 +361,8 @@ menu "RoboMaster Modules"
         bool "Enable RC KEYBOARD"
         default y
 
-    config BSP_USING_REFEREE
-        bool "Enable REFEREE"
+    config BSP_USING_LOG
+        bool "Enable RTT LOG"
         default y
 
     config BSP_USING_LEG

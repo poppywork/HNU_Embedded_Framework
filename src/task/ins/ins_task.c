@@ -149,6 +149,7 @@ void ins_thread_entry(void *argument)
         ins_dt = dwt_get_time_ms() - ins_start;
         if (ins_dt > 1)
             LOG_E("Ins Task is being DELAY! dt = [%f]", &ins_dt);
+
 /* ------------------------------ 调试监测线程调度 ------------------------------ */
         rt_thread_delay(1);
     }
